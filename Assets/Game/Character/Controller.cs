@@ -15,4 +15,12 @@ public class Controller : MonoBehaviour
         Vector2 vector = value.Get<Vector2>();
         character.Move(vector);
     }
+
+    private void OnJump(InputValue value)
+    {
+        if (value.isPressed)
+        {
+            character.Jump();
+        }
+    }
 }
