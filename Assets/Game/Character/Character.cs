@@ -90,22 +90,30 @@ public class Character : MonoBehaviour
 
     [Header("Ground Check")]
     public Transform groundCheck;
-    public float groundCheckRadius = 0.2f;
+    private float checkerRadius = 0.5f;
     public LayerMask groundLayer;
 
+    [Header("Checkers")]
+    public Vector3 checkerTop;
+    private Vector3 checkerBot;
+    private Vector3 checkerLeft;
+    private Vector3 checkerRight;
     void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
         collider = GetComponent<Collider>();
         groundCheck = transform;
-        groundCheck.position = new Vector3(transform.position.x, transform.position.y + collider.bounds.max.y, transform.position.z);
+        // groundCheck.position = new Vector3(transform.position.x, transform.position.y + collider.bounds.max.y, transform.position.z);
+        groundCheck.position = new Vector3(transform.position.x, transform.position.y-1, transform.position.z);
+        Debug.Log(transform.position.y);
+        Debug.Log(collider.bounds.max.y);
         // groundCheck.parent = transform;
         jumpCount = maxJumps;
     }
 
     void Update()
     {
-
+        UpdateCheckers();
         // Ground check
         CheckGround();
     }
@@ -120,12 +128,19 @@ public class Character : MonoBehaviour
         moveDirection = vector.normalized.x;
         horizontalInput = moveDirection;
     }
-    
+
+    void UpdateCheckers()
+    {
+        checkerBot = new Vector3(transform.position.x, collider.bounds.min.y, transform.position.z);
+        checkerTop = new Vector3(transform.position.x, collider.bounds.max.y, transform.position.z);
+        checkerLeft = new Vector3(collider.bounds.min.x, transform.position.y, transform.position.z);
+        checkerRight = new Vector3(collider.bounds.max.x, transform.position.y, transform.position.z);
+    }
     
     void CheckGround()
     {
         // isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundLayer);
+        isGrounded = Physics.CheckSphere(groundCheck.position, checkerRadius, groundLayer);
 
         if (isGrounded)
         {
@@ -148,7 +163,11 @@ public class Character : MonoBehaviour
         if (groundCheck != null)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+            Gizmos.DrawWireSphere(checkerBot, checkerRadius);
+            Gizmos.DrawWireSphere(checkerTop, checkerRadius);
+            Gizmos.DrawWireSphere(checkerLeft, checkerRadius);
+            Gizmos.DrawWireSphere(checkerRight, checkerRadius);
+            // Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         }
     }
 }
