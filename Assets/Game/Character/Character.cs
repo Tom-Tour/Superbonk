@@ -25,68 +25,16 @@ public class Character : MonoBehaviour
     // MODIFIERS
     public bool canMove { get; set; } = true;
     
-    
-    
-    
-    
-    
-    
-    
-    /*
-    void Start()
-    {
-        // REFERENCES
-        rigidbody = GetComponent<Rigidbody>();
-        
-        // GAME_MANAGER
-        gameManager = GameManager.instance;
-        gameManager.RegisterCharacter(this);
-    }
-    void FixedUpdate()
-    {
-        Vector2 totalVelocity = Vector2.zero;
-        totalVelocity += Vector2.ClampMagnitude(moveVelocity, moveForceMax);
-        totalVelocity += Vector2.ClampMagnitude(jumpVelocity, jumpForceMax);
-        totalVelocity += Vector2.ClampMagnitude(pushVelocity, pushForceMax);
-        rigidbody.AddForce(totalVelocity, ForceMode.Impulse);
-        // Freinage progressif vers zéro
-        if (moveDirection == 0)
-        {
-            moveVelocity = Vector3.MoveTowards(moveVelocity, Vector3.zero, dampingForce * Time.deltaTime);
-        }
-
-        jumpVelocity = Vector3.MoveTowards(jumpVelocity, Vector3.zero, dampingForce * Time.deltaTime);
-        pushVelocity = Vector3.MoveTowards(pushVelocity, Vector3.zero, dampingForce * Time.deltaTime);
-
-        // jumpVelocity = Vector3.Lerp(jumpVelocity, Vector3.zero, .1f);
-        // pushVelocity = Vector3.Lerp(pushVelocity, Vector3.zero, .1f);
-    }
-    
-    public void Move(Vector3 vector)
-    {
-        moveDirection = vector.normalized.x;
-        if (moveDirection != 0)
-        {
-            moveVelocity = new Vector3(moveDirection * moveForce, 0, 0);
-        }
-    }
-
-    public void Jump()
-    {
-        jumpVelocity = new Vector3(0, jumpForce, 0);
-    }
-    */
-    
     [Header("Movement")]
-    public float moveSpeed = 8f;
+    private float moveSpeed = 80f;
 
     [Header("Jump")]
-    public float jumpForce = 12f;
-    public int maxJumps = 2;
+    private float jumpForce = 8f;
+    private int maxJumps = 2;
 
     private int jumpCount;
     private bool isGrounded;
-    private float horizontalInput;
+    private float horizontalMovement;
 
     [Header("Ground Check")]
     public Transform groundCheck;
@@ -94,10 +42,14 @@ public class Character : MonoBehaviour
     public LayerMask groundLayer;
 
     [Header("Checkers")]
-    public Vector3 checkerTop;
+    private Vector3 checkerTop;
     private Vector3 checkerBot;
     private Vector3 checkerLeft;
     private Vector3 checkerRight;
+    
+    private Vector3 movement = Vector3.zero;
+
+    private int movingState = 0;
     void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
@@ -114,20 +66,30 @@ public class Character : MonoBehaviour
     void Update()
     {
         UpdateCheckers();
-        // Ground check
-        CheckGround();
     }
-
+    
     void FixedUpdate()
     {
-        rigidbody.linearVelocity = new Vector2(horizontalInput * moveSpeed, rigidbody.linearVelocity.y);
+        if (movingState == 1)
+        {
+            rigidbody.AddForce(movement, ForceMode.Force);
+        }
+        else if (movingState == -1)
+        {
+            Debug.Log("OMG");
+            // rigidbody.AddForce(new Vector3(movement.x*10000, 0, 0), ForceMode.Impulse);
+            // rigidbody.AddForce(Vector2.up * jumpForce, ForceMode.Impulse);
+            // rigidbody.linearVelocity = -rigidbody.linearVelocity;
+            // rigidbody.AddForce(new Vector3(movement.x, 0, 0), ForceMode.Impulse);
+            rigidbody.AddForce(-movement/20, ForceMode.Impulse);
+            movingState = 0;
+        }
+        // rigidbody.linearVelocity += movement * movingState;
+        // rigidbody.linearVelocity = new Vector2(horizontalInput * moveSpeed, rigidbody.linearVelocity.y);
+        // rigidbody.AddForce(movement , ForceMode.Force);
+        // rigidbody.AddForce( new Vector2(horizontalInput * moveSpeed * 10, 0), ForceMode.Force);
     }
 
-    public void Move(Vector3 vector)
-    {
-        moveDirection = vector.normalized.x;
-        horizontalInput = moveDirection;
-    }
 
     void UpdateCheckers()
     {
@@ -135,16 +97,25 @@ public class Character : MonoBehaviour
         checkerTop = new Vector3(transform.position.x, collider.bounds.max.y, transform.position.z);
         checkerLeft = new Vector3(collider.bounds.min.x, transform.position.y, transform.position.z);
         checkerRight = new Vector3(collider.bounds.max.x, transform.position.y, transform.position.z);
-    }
-    
-    void CheckGround()
-    {
-        // isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-        isGrounded = Physics.CheckSphere(groundCheck.position, checkerRadius, groundLayer);
-
+        
+        isGrounded = Physics.CheckSphere(checkerBot, checkerRadius, groundLayer);
         if (isGrounded)
         {
             jumpCount = maxJumps;
+        }
+    }
+    
+    public void Move(Vector3 vector)
+    {
+        horizontalMovement = vector.normalized.x;
+        if (horizontalMovement != 0)
+        {
+            movingState = 1;
+            movement = new Vector3(horizontalMovement * moveSpeed, 0, 0);
+        }
+        else 
+        {
+            movingState = -1;
         }
     }
 
@@ -167,7 +138,6 @@ public class Character : MonoBehaviour
             Gizmos.DrawWireSphere(checkerTop, checkerRadius);
             Gizmos.DrawWireSphere(checkerLeft, checkerRadius);
             Gizmos.DrawWireSphere(checkerRight, checkerRadius);
-            // Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         }
     }
 }
