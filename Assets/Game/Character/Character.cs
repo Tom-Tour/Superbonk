@@ -87,13 +87,22 @@ public class Character : MonoBehaviour
             rigidbody.AddForce(-movement/20, ForceMode.Impulse);
             movingState = 0;
         }
-        // rigidbody.linearVelocity += movement * movingState;
-        // rigidbody.linearVelocity = new Vector2(horizontalInput * moveSpeed, rigidbody.linearVelocity.y);
-        // rigidbody.AddForce(movement , ForceMode.Force);
-        // rigidbody.AddForce( new Vector2(horizontalInput * moveSpeed * 10, 0), ForceMode.Force);
+
+        ApplyGravity();
+        /*
+        velocity.y += gravity * Time.fixedDeltaTime;
+        if (velocity.y < maxFallSpeed)
+        {
+            velocity.y = maxFallSpeed;
+        }
+        rb.velocity = velocity;
+        */
     }
 
-
+    private void ApplyGravity()
+    {
+        // velocity.y += Mathf.Clamp(gameManager.gravity * Time.fixedDeltaTime, 0, 20);
+    }
     
     public void TryMove(Vector2 vector)
     {
