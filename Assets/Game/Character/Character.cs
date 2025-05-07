@@ -2,10 +2,7 @@ using UnityEngine;
 
 public class Character : MonoBehaviour
 {
-    // GAME_MANAGER
     private GameManager gameManager;
-    
-    // REFERENCES
     public Rigidbody rigidbody { get; private set; }
     public Collider collider { get; private set; }
     
@@ -30,7 +27,7 @@ public class Character : MonoBehaviour
 
     [Header("Jump")]
     private float jumpForce = 8f;
-    private int maxJumps = 2;
+    private int jumpCountMax = 2;
 
     private int jumpCount;
     private bool isGrounded;
@@ -38,7 +35,8 @@ public class Character : MonoBehaviour
 
     [Header("Ground Check")]
     public Transform groundCheck;
-    private float checkerRadius = 0.5f;
+
+    private const float CheckerRadius = 0.5f;
     public LayerMask groundLayer;
 
     [Header("Checkers")]
@@ -50,22 +48,27 @@ public class Character : MonoBehaviour
     private Vector3 movement = Vector3.zero;
 
     private int movingState = 0;
-    void Start()
+
+    private void Awake()
     {
-        rigidbody = GetComponent<Rigidbody>();
-        collider = GetComponent<Collider>();
-        groundCheck = transform;
-        // groundCheck.position = new Vector3(transform.position.x, transform.position.y + collider.bounds.max.y, transform.position.z);
-        groundCheck.position = new Vector3(transform.position.x, transform.position.y-1, transform.position.z);
-        Debug.Log(transform.position.y);
-        Debug.Log(collider.bounds.max.y);
-        // groundCheck.parent = transform;
-        jumpCount = maxJumps;
+        InitComponents();
+        InitVariables();
+    }
+    
+    private void Start()
+    {
+        InitGameManager();
+        gameManager.RegisterCharacter(this);
     }
 
     void Update()
     {
         UpdateCheckers();
+        isGrounded = Physics.CheckSphere(checkerBot, CheckerRadius, groundLayer);
+        if (isGrounded)
+        {
+            jumpCount = jumpCountMax;
+        }
     }
     
     void FixedUpdate()
@@ -91,21 +94,12 @@ public class Character : MonoBehaviour
     }
 
 
-    void UpdateCheckers()
-    {
-        checkerBot = new Vector3(transform.position.x, collider.bounds.min.y, transform.position.z);
-        checkerTop = new Vector3(transform.position.x, collider.bounds.max.y, transform.position.z);
-        checkerLeft = new Vector3(collider.bounds.min.x, transform.position.y, transform.position.z);
-        checkerRight = new Vector3(collider.bounds.max.x, transform.position.y, transform.position.z);
-        
-        isGrounded = Physics.CheckSphere(checkerBot, checkerRadius, groundLayer);
-        if (isGrounded)
-        {
-            jumpCount = maxJumps;
-        }
-    }
     
-    public void Move(Vector3 vector)
+    public void TryMove(Vector2 vector)
+    {
+        Move(vector);
+    }
+    private void Move(Vector2 vector)
     {
         horizontalMovement = vector.normalized.x;
         if (horizontalMovement != 0)
@@ -118,26 +112,51 @@ public class Character : MonoBehaviour
             movingState = -1;
         }
     }
-
-    public void Jump()
+    public void TryJump(float jumpValue)
     {
+        Debug.Log(jumpValue);
+        /*
         if (jumpCount > 0)
         {
-            rigidbody.linearVelocity = new Vector2(rigidbody.linearVelocity.x, 0); // Cancel vertical velocity
-            rigidbody.AddForce(Vector2.up * jumpForce, ForceMode.Impulse);
-            jumpCount--;
+            Jump();
         }
+        */
     }
-    
-    void OnDrawGizmosSelected()
+    private void Jump()
+    {
+        rigidbody.linearVelocity = new Vector2(rigidbody.linearVelocity.x, 0);
+        rigidbody.AddForce(Vector2.up * jumpForce, ForceMode.Impulse);
+        jumpCount--;
+    }
+    private void InitComponents()
+    {
+        rigidbody = GetComponent<Rigidbody>();
+        collider = GetComponent<Collider>();
+    }
+    private void InitVariables()
+    {
+        jumpCount = jumpCountMax;
+    }
+    private void InitGameManager()
+    {
+        gameManager = GameManager.instance;
+    }
+    private void UpdateCheckers()
+    {
+        checkerBot = new Vector3(transform.position.x, collider.bounds.min.y, transform.position.z);
+        checkerTop = new Vector3(transform.position.x, collider.bounds.max.y, transform.position.z);
+        checkerLeft = new Vector3(collider.bounds.min.x, transform.position.y, transform.position.z);
+        checkerRight = new Vector3(collider.bounds.max.x, transform.position.y, transform.position.z);
+    }
+    private void OnDrawGizmosSelected()
     {
         if (groundCheck != null)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(checkerBot, checkerRadius);
-            Gizmos.DrawWireSphere(checkerTop, checkerRadius);
-            Gizmos.DrawWireSphere(checkerLeft, checkerRadius);
-            Gizmos.DrawWireSphere(checkerRight, checkerRadius);
+            Gizmos.DrawWireSphere(checkerBot, CheckerRadius);
+            Gizmos.DrawWireSphere(checkerTop, CheckerRadius);
+            Gizmos.DrawWireSphere(checkerLeft, CheckerRadius);
+            Gizmos.DrawWireSphere(checkerRight, CheckerRadius);
         }
     }
 }

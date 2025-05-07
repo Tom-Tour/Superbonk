@@ -4,23 +4,18 @@ using UnityEngine.InputSystem;
 public class Controller : MonoBehaviour
 {
     private Character character;
-
     private void Start()
     {
         character = GetComponent<Character>();
     }
-
-    private void OnMove(InputValue value)
+    private void OnMove(InputValue inputValue)
     {
-        Vector2 vector = value.Get<Vector2>();
-        character.Move(vector);
+        var value = inputValue.Get<Vector2>();
+        character.TryMove(value);
     }
-
-    private void OnJump(InputValue value)
+    private void OnJump(InputValue inputValue)
     {
-        if (value.isPressed)
-        {
-            character.Jump();
-        }
+        float value = inputValue.Get<float>();
+        character.TryJump(value);
     }
 }
