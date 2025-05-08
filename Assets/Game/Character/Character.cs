@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Character : MonoBehaviour
@@ -49,6 +50,35 @@ public class Character : MonoBehaviour
 
     private int movingState = 0;
 
+    
+    
+    
+    
+    
+    private IEnumerator Test()
+    {
+        Debug.Log("Allo");
+        float t = 0f;
+        while (t < 5)
+        {
+            t += Time.deltaTime;
+            yield return null;
+        }
+        Debug.Log("Allo2");
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     private void Awake()
     {
         InitComponents();
@@ -59,6 +89,7 @@ public class Character : MonoBehaviour
     {
         InitGameManager();
         gameManager.RegisterCharacter(this);
+        StartCoroutine(nameof(Test));
     }
 
     void Update()

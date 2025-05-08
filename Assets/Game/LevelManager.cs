@@ -16,7 +16,7 @@ public class LevelManager : MonoBehaviour
         
         if (level.music)
         {
-            AudioManager.instance.PlayMusic(level.music);
+            AudioManager.Instance.PlayMusic(level.music);
         }
         
         for (int i = 0; i < level.spawnPoints.Length; i++)
