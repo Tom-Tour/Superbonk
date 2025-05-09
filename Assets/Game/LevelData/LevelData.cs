@@ -1,0 +1,21 @@
+using UnityEngine;
+
+public class LevelData : MonoBehaviour
+{
+    public static LevelData instance;
+    public LevelDB data;
+    public float gravity;
+    public Vector3 gravityDirection;
+
+    void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        instance = this;
+        gravity = data.gravityForce;
+        gravityDirection = data.gravityDirection;
+    }
+}

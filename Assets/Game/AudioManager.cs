@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class AudioManager : MonoBehaviour
 {
-    public static AudioManager Instance { get; private set; }
+    public static AudioManager instance { get; private set; }
     private List<AudioSource> musicsSources = new List<AudioSource>();
     private float musicsVolume = 1f;
     private int musicsPoolSize = 2;
@@ -14,12 +14,12 @@ public class AudioManager : MonoBehaviour
     
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (instance != null && instance != this)
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
+        instance = this;
         for (int i = 0; i < musicsPoolSize; i++)
         {
             AudioSource source = gameObject.AddComponent<AudioSource>();

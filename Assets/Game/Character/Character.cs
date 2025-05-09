@@ -1,5 +1,8 @@
 using System.Collections;
+using System.Numerics;
 using UnityEngine;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 public class Character : MonoBehaviour
 {
@@ -49,30 +52,17 @@ public class Character : MonoBehaviour
     private Vector3 movement = Vector3.zero;
 
     private int movingState = 0;
-
     
     
+    // Physic
+    private Vector3 velocity = Vector3.zero;
+    
+    // Gravity
+    private float gravityMultiplier = 1;
+    private Vector3 gravityDirectionOverride  =  Vector3.zero;
     
     
-    
-    private IEnumerator Test()
-    {
-        Debug.Log("Allo");
-        float t = 0f;
-        while (t < 5)
-        {
-            t += Time.deltaTime;
-            yield return null;
-        }
-        Debug.Log("Allo2");
-    }
-    
-    
-    
-    
-    
-    
-    
+    private bool isMoving = false;
     
     
     
@@ -89,7 +79,6 @@ public class Character : MonoBehaviour
     {
         InitGameManager();
         gameManager.RegisterCharacter(this);
-        StartCoroutine(nameof(Test));
     }
 
     void Update()
@@ -104,6 +93,7 @@ public class Character : MonoBehaviour
     
     void FixedUpdate()
     {
+        /*
         if (movingState == 1)
         {
             rigidbody.AddForce(movement, ForceMode.Force);
@@ -118,8 +108,8 @@ public class Character : MonoBehaviour
             rigidbody.AddForce(-movement/20, ForceMode.Impulse);
             movingState = 0;
         }
+        */
 
-        ApplyGravity();
         /*
         velocity.y += gravity * Time.fixedDeltaTime;
         if (velocity.y < maxFallSpeed)
@@ -128,11 +118,29 @@ public class Character : MonoBehaviour
         }
         rb.velocity = velocity;
         */
+        velocity = Vector3.zero;
+        // ApplyGravity();
+        ApplyMovement();
+        rigidbody.linearVelocity = velocity;
+        transform.position = new Vector3(transform.position.x, transform.position.y, 0);
     }
 
     private void ApplyGravity()
     {
-        // velocity.y += Mathf.Clamp(gameManager.gravity * Time.fixedDeltaTime, 0, 20);
+        if (gravityDirectionOverride != Vector3.zero)
+        {
+            velocity += gravityDirectionOverride * Mathf.Clamp(LevelData.instance.gravity * gravityMultiplier * Time.fixedDeltaTime, 0, 20 * gravityMultiplier);
+        }
+        velocity += LevelData.instance.gravityDirection * Mathf.Clamp(LevelData.instance.gravity * gravityMultiplier * Time.fixedDeltaTime, 0, 20 * gravityMultiplier);
+    }
+
+    private void ApplyMovement()
+    {
+        if (!isMoving)
+        {
+            movement *= .88f;
+        }
+        velocity += movement;
     }
     
     public void TryMove(Vector2 vector)
@@ -144,23 +152,21 @@ public class Character : MonoBehaviour
         horizontalMovement = vector.normalized.x;
         if (horizontalMovement != 0)
         {
-            movingState = 1;
-            movement = new Vector3(horizontalMovement * moveSpeed, 0, 0);
+            isMoving = true;
+            movement = new Vector3(horizontalMovement * moveSpeed * Time.fixedDeltaTime, 0, 0);
         }
-        else 
+        else
         {
-            movingState = -1;
+            isMoving = false;
         }
     }
     public void TryJump(float jumpValue)
     {
         Debug.Log(jumpValue);
-        /*
         if (jumpCount > 0)
         {
             Jump();
         }
-        */
     }
     private void Jump()
     {

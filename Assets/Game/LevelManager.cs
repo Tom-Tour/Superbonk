@@ -3,20 +3,20 @@ using UnityEngine.SceneManagement;
 
 public class LevelManager : MonoBehaviour
 {
-    public LevelData currentLevel;
+    public LevelDB currentLevel;
 
     void Start()
     {
         LoadLevel(currentLevel);
     }
 
-    public void LoadLevel(LevelData level)
+    public void LoadLevel(LevelDB level)
     {
         SceneManager.LoadScene(level.scene.name);
         
         if (level.music)
         {
-            AudioManager.Instance.PlayMusic(level.music);
+            AudioManager.instance.PlayMusic(level.music);
         }
         
         for (int i = 0; i < level.spawnPoints.Length; i++)
