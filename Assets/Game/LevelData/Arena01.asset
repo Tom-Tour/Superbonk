@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6911d6eaa5a9f949ace6f5b82c48015, type: 3}
   m_Name: Arena01
   m_EditorClassIdentifier: 
-  name: 
-  description: 
+  name: Arena
+  description: This is the classic arena
   thumbnail: {fileID: 0}
   scene:
     m_Handle: 0
