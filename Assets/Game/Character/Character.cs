@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Numerics;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
@@ -26,21 +27,17 @@ public class Character : MonoBehaviour
     // MODIFIERS
     public bool canMove { get; set; } = true;
     
-    [Header("Movement")]
-    private float moveSpeed = 80f;
-
-    [Header("Jump")]
-    private float jumpForce = 8f;
-    private int jumpCountMax = 2;
+    private float moveSpeed = 8f;
+    private float inertiaAir = 2f;
+    private float inertiaGround = 2f;
+    private float jumpForce = 14f;
+    private int jumpCountMax = 20;
 
     private int jumpCount;
     private bool isGrounded;
     private float horizontalMovement;
 
-    [Header("Ground Check")]
-    public Transform groundCheck;
-
-    private const float CheckerRadius = 0.5f;
+    private const float CheckerRadius = .2f;
     public LayerMask groundLayer;
 
     [Header("Checkers")]
@@ -49,7 +46,6 @@ public class Character : MonoBehaviour
     private Vector3 checkerLeft;
     private Vector3 checkerRight;
     
-    private Vector3 movement = Vector3.zero;
 
     private int movingState = 0;
     
@@ -58,15 +54,22 @@ public class Character : MonoBehaviour
     private Vector3 velocity = Vector3.zero;
     
     // Gravity
-    private float gravityMultiplier = 1;
+    private float gravityMultiplier = 1f;
     private Vector3 gravityDirectionOverride  =  Vector3.zero;
     
     
+    private bool isGravityOverrided = false;
     private bool isMoving = false;
+    private bool isJumping = false;
+    private bool isTouchingLeftWall = false;
+    private bool isTouchingRightWall = false;
+    private bool isTouchingTopWall = false;
+    private Vector3 jumpingForce = Vector3.zero;
     
     
     
-    
+    private Vector3 movement = Vector3.zero;
+    private Vector3 gravity = Vector3.zero;
     
     
     private void Awake()
@@ -84,95 +87,167 @@ public class Character : MonoBehaviour
     void Update()
     {
         UpdateCheckers();
-        isGrounded = Physics.CheckSphere(checkerBot, CheckerRadius, groundLayer);
-        if (isGrounded)
+        // isGrounded = Physics.CheckSphere(checkerBot, CheckerRadius, groundLayer);
+        isGrounded = Physics.CheckBox(checkerBot, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
+        if (isGrounded && !isJumping)
         {
             jumpCount = jumpCountMax;
         }
+        isTouchingLeftWall = Physics.CheckBox(checkerLeft, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
+        isTouchingRightWall = Physics.CheckBox(checkerRight, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
+        isTouchingTopWall = Physics.CheckBox(checkerTop, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
     }
     
     void FixedUpdate()
     {
-        /*
-        if (movingState == 1)
-        {
-            rigidbody.AddForce(movement, ForceMode.Force);
-        }
-        else if (movingState == -1)
-        {
-            Debug.Log("OMG");
-            // rigidbody.AddForce(new Vector3(movement.x*10000, 0, 0), ForceMode.Impulse);
-            // rigidbody.AddForce(Vector2.up * jumpForce, ForceMode.Impulse);
-            // rigidbody.linearVelocity = -rigidbody.linearVelocity;
-            // rigidbody.AddForce(new Vector3(movement.x, 0, 0), ForceMode.Impulse);
-            rigidbody.AddForce(-movement/20, ForceMode.Impulse);
-            movingState = 0;
-        }
-        */
-
-        /*
-        velocity.y += gravity * Time.fixedDeltaTime;
-        if (velocity.y < maxFallSpeed)
-        {
-            velocity.y = maxFallSpeed;
-        }
-        rb.velocity = velocity;
-        */
         velocity = Vector3.zero;
-        // ApplyGravity();
+        ApplyGravity();
         ApplyMovement();
+        ApplyJumpingForce();
         rigidbody.linearVelocity = velocity;
         transform.position = new Vector3(transform.position.x, transform.position.y, 0);
     }
 
     private void ApplyGravity()
     {
-        if (gravityDirectionOverride != Vector3.zero)
+        float gravityForce = LevelData.instance.gravityForce * gravityMultiplier;
+        if (isGrounded)
         {
-            velocity += gravityDirectionOverride * Mathf.Clamp(LevelData.instance.gravity * gravityMultiplier * Time.fixedDeltaTime, 0, 20 * gravityMultiplier);
+            gravity = Vector3.zero;
         }
-        velocity += LevelData.instance.gravityDirection * Mathf.Clamp(LevelData.instance.gravity * gravityMultiplier * Time.fixedDeltaTime, 0, 20 * gravityMultiplier);
-    }
+        else
+        {
+            Vector3 gravityDirectionSource = isGravityOverrided ? gravityDirectionOverride : LevelData.instance.gravityDirection;
+            if (gravity == Vector3.zero)
+            {
+                // gravity = gravityDirectionSource * (LevelData.instance.gravityForce * gravityMultiplier * Time.fixedDeltaTime);
+                // gravity = Vector3.down;
+                gravity = gravityDirectionSource;
+            }
+            else
+            {
+                // gravity *= 1.1f;
+                // gravity = Vector3.Lerp(gravity, gravityDirectionSource * (20 * gravityMultiplier), gravityMultiplier * Time.fixedDeltaTime);
+                // gravity = Vector3.Lerp(Vector3.zero, gravityDirectionSource * (20 * gravityMultiplier), (Mathf.Abs(gravity.y)+1)/200);
+                gravity = Vector3.Lerp(Vector3.zero, gravityDirectionSource * gravityForce, Mathf.Abs(gravity.magnitude)/gravityForce + 1f/(gravityForce*4));
+            }
+        }
 
+        // gravity = new Vector3(Mathf.Clamp(gravity.x, -20 * gravityMultiplier, 20 * gravityMultiplier), Mathf.Clamp(gravity.y, -20 * gravityMultiplier, 20 * gravityMultiplier), Mathf.Clamp(gravity.z, -20 * gravityMultiplier, 20 * gravityMultiplier));
+        gravity = Vector3.ClampMagnitude(gravity, gravityForce);
+        velocity += gravity;
+    }
     private void ApplyMovement()
     {
+        if (isTouchingLeftWall)
+        {
+            movement = new Vector3(Mathf.Max(movement.x, 0), movement.y, movement.z);
+        }
+        if (isTouchingRightWall)
+        {
+            movement = new Vector3(Mathf.Min(movement.x, 0), movement.y, movement.z);
+        }
+        if (!isTouchingLeftWall && !isTouchingRightWall && isMoving)
+        {
+            movement = new Vector3(horizontalMovement * moveSpeed, 0, 0);
+        }
         if (!isMoving)
         {
-            movement *= .88f;
+            movement.x = Mathf.Lerp(0, Mathf.Sign(movement.x) * moveSpeed, Mathf.Abs(movement.magnitude)/moveSpeed - 1f/(moveSpeed*inertiaGround));
+            // movement *= .88f;
+            if (movement.magnitude < .2f)
+            {
+                movement = Vector3.zero;
+            }
         }
         velocity += movement;
     }
-    
-    public void TryMove(Vector2 vector)
+    private void ApplyJumpingForce()
     {
-        Move(vector);
+        if (isTouchingTopWall)
+        {
+            jumpingForce = Vector3.zero;
+        }
+        if (isJumping)
+        {
+            jumpingForce *= .96f;
+            if (Mathf.Abs(jumpingForce.magnitude) < Mathf.Abs(gravity.magnitude))
+            {
+                isJumping = false;
+            }
+        }
+        else
+        {
+            if (jumpingForce.magnitude < .2f)
+            {
+                jumpingForce = Vector3.zero;
+            }
+            else
+            {
+                jumpingForce *= .8f;
+            }
+        }
+        velocity += jumpingForce;
     }
+    
     private void Move(Vector2 vector)
     {
         horizontalMovement = vector.normalized.x;
         if (horizontalMovement != 0)
         {
             isMoving = true;
-            movement = new Vector3(horizontalMovement * moveSpeed * Time.fixedDeltaTime, 0, 0);
+            movement = new Vector3(horizontalMovement * moveSpeed, 0, 0);
         }
         else
         {
             isMoving = false;
         }
     }
-    public void TryJump(float jumpValue)
+    private void Jump(float value)
     {
-        Debug.Log(jumpValue);
-        if (jumpCount > 0)
+        if (value != 0)
         {
-            Jump();
+            if (jumpCount > 0)
+            {
+                isJumping = true;
+                jumpingForce = -LevelData.instance.gravityDirection * jumpForce;
+                jumpCount--;
+                gravity = Vector3.zero;
+            }
+        }
+        else
+        {
+            isJumping = false;
         }
     }
-    private void Jump()
+    private void UpdateCheckers()
     {
-        rigidbody.linearVelocity = new Vector2(rigidbody.linearVelocity.x, 0);
-        rigidbody.AddForce(Vector2.up * jumpForce, ForceMode.Impulse);
-        jumpCount--;
+        checkerBot = new Vector3(transform.position.x, collider.bounds.min.y, transform.position.z);
+        checkerTop = new Vector3(transform.position.x, collider.bounds.max.y, transform.position.z);
+        checkerLeft = new Vector3(collider.bounds.min.x, transform.position.y, transform.position.z);
+        checkerRight = new Vector3(collider.bounds.max.x, transform.position.y, transform.position.z);
+    }
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        /*
+        Gizmos.DrawWireSphere(checkerBot, CheckerRadius);
+        Gizmos.DrawWireSphere(checkerTop, CheckerRadius);
+        Gizmos.DrawWireSphere(checkerLeft, CheckerRadius);
+        Gizmos.DrawWireSphere(checkerRight, CheckerRadius);
+        */
+        Gizmos.DrawWireCube(checkerBot, new Vector3(0.98f, 0.02f, 0.98f));
+        Gizmos.DrawWireCube(checkerTop, new Vector3(0.98f, 0.02f, 0.98f));
+        Gizmos.DrawWireCube(checkerLeft, new Vector3(0.02f, 0.98f, 0.98f));
+        Gizmos.DrawWireCube(checkerRight, new Vector3(0.02f, 0.98f, 0.98f));
+    }
+    public void TryJump(float value)
+    {
+        Jump(value);
+    }
+    public void TryMove(Vector2 vector)
+    {
+        Move(vector);
     }
     private void InitComponents()
     {
@@ -186,23 +261,5 @@ public class Character : MonoBehaviour
     private void InitGameManager()
     {
         gameManager = GameManager.instance;
-    }
-    private void UpdateCheckers()
-    {
-        checkerBot = new Vector3(transform.position.x, collider.bounds.min.y, transform.position.z);
-        checkerTop = new Vector3(transform.position.x, collider.bounds.max.y, transform.position.z);
-        checkerLeft = new Vector3(collider.bounds.min.x, transform.position.y, transform.position.z);
-        checkerRight = new Vector3(collider.bounds.max.x, transform.position.y, transform.position.z);
-    }
-    private void OnDrawGizmosSelected()
-    {
-        if (groundCheck != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(checkerBot, CheckerRadius);
-            Gizmos.DrawWireSphere(checkerTop, CheckerRadius);
-            Gizmos.DrawWireSphere(checkerLeft, CheckerRadius);
-            Gizmos.DrawWireSphere(checkerRight, CheckerRadius);
-        }
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance { get; private set; }
-    public List<Character> Characters { get; private set; } = new List<Character>();
+    public List<Character> characters { get; private set; } = new List<Character>();
 
 
     private void Awake()
@@ -22,6 +22,6 @@ public class GameManager : MonoBehaviour
 
     public void RegisterCharacter(Character character)
     {
-        Characters.Add(character);
+        characters.Add(character);
     }
 }

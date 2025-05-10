@@ -4,7 +4,7 @@ public class LevelData : MonoBehaviour
 {
     public static LevelData instance;
     public LevelDB data;
-    public float gravity;
+    public float gravityForce;
     public Vector3 gravityDirection;
 
     void Awake()
@@ -15,7 +15,7 @@ public class LevelData : MonoBehaviour
             return;
         }
         instance = this;
-        gravity = data.gravityForce;
+        gravityForce = data.gravityForce;
         gravityDirection = data.gravityDirection;
     }
 }
