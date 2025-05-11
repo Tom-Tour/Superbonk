@@ -27,9 +27,9 @@ public class Character : MonoBehaviour
     // MODIFIERS
     public bool canMove { get; set; } = true;
     
-    private float moveSpeed = 8f;
-    private float inertiaAir = 2f;
-    private float inertiaGround = 2f;
+    private float moveSpeed = 480f;
+    private float inertiaAir = 1f;
+    private float inertiaGround = 1f;
     private float jumpForce = 14f;
     private int jumpCountMax = 20;
 
@@ -105,7 +105,7 @@ public class Character : MonoBehaviour
         ApplyMovement();
         ApplyJumpingForce();
         rigidbody.linearVelocity = velocity;
-        transform.position = new Vector3(transform.position.x, transform.position.y, 0);
+        // transform.position = new Vector3(transform.position.x, transform.position.y, 0);
     }
 
     private void ApplyGravity()
@@ -137,6 +137,7 @@ public class Character : MonoBehaviour
         gravity = Vector3.ClampMagnitude(gravity, gravityForce);
         velocity += gravity;
     }
+    /*
     private void ApplyMovement()
     {
         if (isTouchingLeftWall)
@@ -153,7 +154,8 @@ public class Character : MonoBehaviour
         }
         if (!isMoving)
         {
-            movement.x = Mathf.Lerp(0, Mathf.Sign(movement.x) * moveSpeed, Mathf.Abs(movement.magnitude)/moveSpeed - 1f/(moveSpeed*inertiaGround));
+            float inertia = isGrounded ? inertiaAir : inertiaGround;
+            movement.x = Mathf.Lerp(0, Mathf.Sign(movement.x) * moveSpeed, Mathf.Abs(movement.magnitude)/moveSpeed - 1f/(moveSpeed*inertia));
             // movement *= .88f;
             if (movement.magnitude < .2f)
             {
@@ -162,6 +164,68 @@ public class Character : MonoBehaviour
         }
         velocity += movement;
     }
+    */
+    /*
+    private void ApplyMovement()
+    {
+        if (isTouchingLeftWall && movement.x < 0 || isTouchingRightWall && movement.x > 0)
+        {
+            movement.x = 0;
+        }
+        if (isMoving && !isTouchingLeftWall && !isTouchingRightWall)
+        {
+            movement.x = horizontalMovement * moveSpeed;
+        }
+        else if (!isMoving)
+        {
+            float inertia = isGrounded ? inertiaGround : inertiaAir;
+            float direction = Mathf.Sign(movement.x);
+            float speedFactor = Mathf.Clamp01(movement.magnitude/moveSpeed);
+            float deceleration = Mathf.Lerp(0, moveSpeed, speedFactor - 1f / inertia);
+            movement.x = direction * deceleration;
+        }
+        Vector3 deltaMovement = movement * Time.deltaTime;
+        if (deltaMovement.magnitude < 0.2f * Time.deltaTime)
+        {
+            deltaMovement = Vector3.zero;
+        }
+        velocity += deltaMovement;
+    }
+    */
+    private void ApplyMovement()
+    {
+        if ((isTouchingLeftWall && movement.x < 0) || (isTouchingRightWall && movement.x > 0))
+        {
+            movement.x = 0f;
+        }
+        if (isMoving && !isTouchingLeftWall && !isTouchingRightWall)
+        {
+            movement.x = horizontalMovement * moveSpeed;
+        }
+        else if (!isMoving)
+        {
+            float inertia = isGrounded ? inertiaGround : inertiaAir;
+            if (inertia <= 0f)
+            {
+                movement.x = 0f;
+            }
+            else
+            {
+                float decelerationRate = moveSpeed / inertia;
+                movement.x = Mathf.MoveTowards(movement.x, 0f, decelerationRate * Time.deltaTime);
+            }
+        }
+        Vector3 deltaMovement = movement * Time.deltaTime;
+        if (deltaMovement.magnitude < 0.01f)
+        {
+            deltaMovement = Vector3.zero;
+        }
+        velocity += deltaMovement;
+    }
+
+
+
+
     private void ApplyJumpingForce()
     {
         if (isTouchingTopWall)
