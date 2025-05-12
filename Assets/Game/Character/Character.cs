@@ -10,8 +10,10 @@ using Vector3 = UnityEngine.Vector3;
 public class Character : MonoBehaviour
 {
     private GameManager gameManager;
-    public Rigidbody rigidbody { get; private set; }
-    public Collider collider { get; private set; }
+    // public Rigidbody rigidbody { get; private set; }
+    // public Collider collider { get; private set; }
+    public Rigidbody2D rigidbody { get; private set; }
+    public Collider2D collider { get; private set; }
     
     
     // MODIFIERS
@@ -49,7 +51,7 @@ public class Character : MonoBehaviour
     private Vector3 checkerLeft;
     private Vector3 checkerRight;
     
-    private void Awake()
+    protected virtual void Awake()
     {
         InitComponents();
         InitVariables();
@@ -181,6 +183,8 @@ public class Character : MonoBehaviour
         {
             isMoving = true;
             movement = new Vector3(horizontalMovement * moveSpeed, 0, 0);
+            float newRotation = horizontalMovement > 0 ? 0f : 180f;
+            transform.rotation = new Quaternion(transform.rotation.x, newRotation, transform.rotation.z, 0);
         }
         else
         {
@@ -230,8 +234,10 @@ public class Character : MonoBehaviour
     }
     private void InitComponents()
     {
-        rigidbody = GetComponent<Rigidbody>();
-        collider = GetComponent<Collider>();
+        // rigidbody = GetComponent<Rigidbody>();
+        // collider = GetComponent<Collider>();
+        rigidbody = GetComponent<Rigidbody2D>();
+        collider = GetComponent<Collider2D>();
     }
     private void InitVariables()
     {
