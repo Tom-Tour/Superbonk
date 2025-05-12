@@ -1,9 +1,11 @@
-using System.Collections;
-using System.Numerics;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
+
+// Bug à corriger :
+// Le personnage s'enfonce dans le sol à l'atterrissage avec une vélocité un peu trop forte, arrêtant complètement l'inertie.
+// Le personnage peut se retrouver coincé dans certains angles.
 
 public class Character : MonoBehaviour
 {
@@ -11,66 +13,41 @@ public class Character : MonoBehaviour
     public Rigidbody rigidbody { get; private set; }
     public Collider collider { get; private set; }
     
-    // CHARACTER_MOVEMENT
-    private Vector3 moveVelocity, jumpVelocity, pushVelocity;
-    private float moveDirection;
-    private float moveForceMax = 1f;
-    private float jumpForceMax = 1f;
-    private float pushForceMax = 1f;
-    
-    // CHARACTER_JUMP
-    // private float jumpForce = 5f;
-    private float moveForce = 1f;
-
-    private float dampingForce = 40;
     
     // MODIFIERS
-    public bool canMove { get; set; } = true;
-    
-    private float moveSpeed = 480f;
-    private float inertiaAir = 1f;
-    private float inertiaGround = 1f;
-    private float jumpForce = 14f;
     private int jumpCountMax = 20;
-
-    private int jumpCount;
-    private bool isGrounded;
-    private float horizontalMovement;
-
-    private const float CheckerRadius = .2f;
-    public LayerMask groundLayer;
-
-    [Header("Checkers")]
-    private Vector3 checkerTop;
-    private Vector3 checkerBot;
-    private Vector3 checkerLeft;
-    private Vector3 checkerRight;
-    
-
-    private int movingState = 0;
-    
-    
-    // Physic
-    private Vector3 velocity = Vector3.zero;
-    
-    // Gravity
+    private float jumpForce = 14f;
+    private float moveSpeed = 480f;
+    private float inertiaAir = .2f;
+    private float inertiaGround = .2f;
     private float gravityMultiplier = 1f;
-    private Vector3 gravityDirectionOverride  =  Vector3.zero;
-    
-    
-    private bool isGravityOverrided = false;
+    private Vector3 gravityDirectionOverride = Vector3.zero;
+
+    // INFORMATIVES
+    private float horizontalMovement;
+    private int jumpCount;
+    private bool canMove = true;
+    private bool isGrounded;
     private bool isMoving = false;
     private bool isJumping = false;
     private bool isTouchingLeftWall = false;
     private bool isTouchingRightWall = false;
     private bool isTouchingTopWall = false;
+    private bool isGravityOverrided = false;
+    private Vector3 velocity = Vector3.zero;
     private Vector3 jumpingForce = Vector3.zero;
-    
-    
-    
     private Vector3 movement = Vector3.zero;
     private Vector3 gravity = Vector3.zero;
+
+    // OTHERS
+    public LayerMask groundLayer;
     
+    // CHECKERS
+    private const float CheckerRadius = .2f;
+    private Vector3 checkerTop;
+    private Vector3 checkerBot;
+    private Vector3 checkerLeft;
+    private Vector3 checkerRight;
     
     private void Awake()
     {
@@ -87,7 +64,6 @@ public class Character : MonoBehaviour
     void Update()
     {
         UpdateCheckers();
-        // isGrounded = Physics.CheckSphere(checkerBot, CheckerRadius, groundLayer);
         isGrounded = Physics.CheckBox(checkerBot, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
         if (isGrounded && !isJumping)
         {
@@ -96,6 +72,13 @@ public class Character : MonoBehaviour
         isTouchingLeftWall = Physics.CheckBox(checkerLeft, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
         isTouchingRightWall = Physics.CheckBox(checkerRight, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
         isTouchingTopWall = Physics.CheckBox(checkerTop, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
+        
+        Vector3 center = transform.position;
+        float radius = 1f;
+        Utils.DrawCircle(center, radius, Color.darkGreen);
+        Vector3 point = new Vector3(6f, 6f, 0);
+        Vector3 clampedPoint = Utils.ClampPoint(point, center, radius);
+        Debug.Log("Clamped Point: " + clampedPoint);
     }
     
     void FixedUpdate()
@@ -105,7 +88,10 @@ public class Character : MonoBehaviour
         ApplyMovement();
         ApplyJumpingForce();
         rigidbody.linearVelocity = velocity;
-        // transform.position = new Vector3(transform.position.x, transform.position.y, 0);
+        if (transform.position.z != 0)
+        {
+            transform.position = new Vector3(transform.position.x, transform.position.y, 0);
+        }
     }
 
     private void ApplyGravity()
@@ -120,78 +106,16 @@ public class Character : MonoBehaviour
             Vector3 gravityDirectionSource = isGravityOverrided ? gravityDirectionOverride : LevelData.instance.gravityDirection;
             if (gravity == Vector3.zero)
             {
-                // gravity = gravityDirectionSource * (LevelData.instance.gravityForce * gravityMultiplier * Time.fixedDeltaTime);
-                // gravity = Vector3.down;
                 gravity = gravityDirectionSource;
             }
             else
             {
-                // gravity *= 1.1f;
-                // gravity = Vector3.Lerp(gravity, gravityDirectionSource * (20 * gravityMultiplier), gravityMultiplier * Time.fixedDeltaTime);
-                // gravity = Vector3.Lerp(Vector3.zero, gravityDirectionSource * (20 * gravityMultiplier), (Mathf.Abs(gravity.y)+1)/200);
                 gravity = Vector3.Lerp(Vector3.zero, gravityDirectionSource * gravityForce, Mathf.Abs(gravity.magnitude)/gravityForce + 1f/(gravityForce*4));
             }
         }
-
-        // gravity = new Vector3(Mathf.Clamp(gravity.x, -20 * gravityMultiplier, 20 * gravityMultiplier), Mathf.Clamp(gravity.y, -20 * gravityMultiplier, 20 * gravityMultiplier), Mathf.Clamp(gravity.z, -20 * gravityMultiplier, 20 * gravityMultiplier));
         gravity = Vector3.ClampMagnitude(gravity, gravityForce);
         velocity += gravity;
     }
-    /*
-    private void ApplyMovement()
-    {
-        if (isTouchingLeftWall)
-        {
-            movement = new Vector3(Mathf.Max(movement.x, 0), movement.y, movement.z);
-        }
-        if (isTouchingRightWall)
-        {
-            movement = new Vector3(Mathf.Min(movement.x, 0), movement.y, movement.z);
-        }
-        if (!isTouchingLeftWall && !isTouchingRightWall && isMoving)
-        {
-            movement = new Vector3(horizontalMovement * moveSpeed, 0, 0);
-        }
-        if (!isMoving)
-        {
-            float inertia = isGrounded ? inertiaAir : inertiaGround;
-            movement.x = Mathf.Lerp(0, Mathf.Sign(movement.x) * moveSpeed, Mathf.Abs(movement.magnitude)/moveSpeed - 1f/(moveSpeed*inertia));
-            // movement *= .88f;
-            if (movement.magnitude < .2f)
-            {
-                movement = Vector3.zero;
-            }
-        }
-        velocity += movement;
-    }
-    */
-    /*
-    private void ApplyMovement()
-    {
-        if (isTouchingLeftWall && movement.x < 0 || isTouchingRightWall && movement.x > 0)
-        {
-            movement.x = 0;
-        }
-        if (isMoving && !isTouchingLeftWall && !isTouchingRightWall)
-        {
-            movement.x = horizontalMovement * moveSpeed;
-        }
-        else if (!isMoving)
-        {
-            float inertia = isGrounded ? inertiaGround : inertiaAir;
-            float direction = Mathf.Sign(movement.x);
-            float speedFactor = Mathf.Clamp01(movement.magnitude/moveSpeed);
-            float deceleration = Mathf.Lerp(0, moveSpeed, speedFactor - 1f / inertia);
-            movement.x = direction * deceleration;
-        }
-        Vector3 deltaMovement = movement * Time.deltaTime;
-        if (deltaMovement.magnitude < 0.2f * Time.deltaTime)
-        {
-            deltaMovement = Vector3.zero;
-        }
-        velocity += deltaMovement;
-    }
-    */
     private void ApplyMovement()
     {
         if ((isTouchingLeftWall && movement.x < 0) || (isTouchingRightWall && movement.x > 0))
@@ -222,10 +146,6 @@ public class Character : MonoBehaviour
         }
         velocity += deltaMovement;
     }
-
-
-
-
     private void ApplyJumpingForce()
     {
         if (isTouchingTopWall)
@@ -294,16 +214,11 @@ public class Character : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
-        /*
-        Gizmos.DrawWireSphere(checkerBot, CheckerRadius);
-        Gizmos.DrawWireSphere(checkerTop, CheckerRadius);
-        Gizmos.DrawWireSphere(checkerLeft, CheckerRadius);
-        Gizmos.DrawWireSphere(checkerRight, CheckerRadius);
-        */
         Gizmos.DrawWireCube(checkerBot, new Vector3(0.98f, 0.02f, 0.98f));
         Gizmos.DrawWireCube(checkerTop, new Vector3(0.98f, 0.02f, 0.98f));
         Gizmos.DrawWireCube(checkerLeft, new Vector3(0.02f, 0.98f, 0.98f));
         Gizmos.DrawWireCube(checkerRight, new Vector3(0.02f, 0.98f, 0.98f));
+        Gizmos.DrawWireSphere(transform.position, 1f);
     }
     public void TryJump(float value)
     {
