@@ -6,14 +6,14 @@ using Vector3 = UnityEngine.Vector3;
 // Bug à corriger :
 // Le personnage s'enfonce dans le sol à l'atterrissage avec une vélocité un peu trop forte, arrêtant complètement l'inertie.
 // Le personnage peut se retrouver coincé dans certains angles.
+// Le personnage clip dans le sol quand il rentre dans le sol avec encore un peu de jumpingForce.
+// TODO On doit normaliser la vitesse de la gravité peu importe son sens.
 
 public class Character : MonoBehaviour
 {
     private GameManager gameManager;
-    // public Rigidbody rigidbody { get; private set; }
-    // public Collider collider { get; private set; }
-    public Rigidbody2D rigidbody { get; private set; }
-    public Collider2D collider { get; private set; }
+    public Rigidbody rigidbody { get; private set; }
+    public Collider collider { get; private set; }
     
     
     // MODIFIERS
@@ -23,19 +23,20 @@ public class Character : MonoBehaviour
     private float inertiaAir = .2f;
     private float inertiaGround = .2f;
     private float gravityMultiplier = 1f;
+    private float rangeRadius = 1f;
     private Vector3 gravityDirectionOverride = Vector3.zero;
 
     // INFORMATIVES
     private float horizontalMovement;
     private int jumpCount;
-    private bool canMove = true;
-    private bool isGrounded;
-    private bool isMoving = false;
-    private bool isJumping = false;
-    private bool isTouchingLeftWall = false;
-    private bool isTouchingRightWall = false;
-    private bool isTouchingTopWall = false;
-    private bool isGravityOverrided = false;
+    public bool canMove { get; private set; } = true;
+    public bool isGrounded { get; private set; } = false;
+    public bool isMoving { get; private set; } = false;
+    public bool isJumping { get; private set; } = false;
+    public bool isTouchingLeftWall { get; private set; } = false;
+    public bool isTouchingRightWall { get; private set; } = false;
+    public bool isTouchingTopWall { get; private set; } = false;
+    public bool isGravityOverrided { get; private set; } = false;
     private Vector3 velocity = Vector3.zero;
     private Vector3 jumpingForce = Vector3.zero;
     private Vector3 movement = Vector3.zero;
@@ -66,29 +67,15 @@ public class Character : MonoBehaviour
     void Update()
     {
         UpdateCheckers();
-        isGrounded = Physics.CheckBox(checkerBot, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
-        if (isGrounded && !isJumping)
-        {
-            jumpCount = jumpCountMax;
-        }
-        isTouchingLeftWall = Physics.CheckBox(checkerLeft, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
-        isTouchingRightWall = Physics.CheckBox(checkerRight, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
-        isTouchingTopWall = Physics.CheckBox(checkerTop, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
-        
-        Vector3 center = transform.position;
-        float radius = 1f;
-        Utils.DrawCircle(center, radius, Color.darkGreen);
-        Vector3 point = new Vector3(6f, 6f, 0);
-        Vector3 clampedPoint = Utils.ClampPoint(point, center, radius);
-        Debug.Log("Clamped Point: " + clampedPoint);
+        // DrawRange();
     }
     
     void FixedUpdate()
     {
         velocity = Vector3.zero;
-        ApplyGravity();
         ApplyMovement();
         ApplyJumpingForce();
+        ApplyGravity();
         rigidbody.linearVelocity = velocity;
         if (transform.position.z != 0)
         {
@@ -96,28 +83,6 @@ public class Character : MonoBehaviour
         }
     }
 
-    private void ApplyGravity()
-    {
-        float gravityForce = LevelData.instance.gravityForce * gravityMultiplier;
-        if (isGrounded)
-        {
-            gravity = Vector3.zero;
-        }
-        else
-        {
-            Vector3 gravityDirectionSource = isGravityOverrided ? gravityDirectionOverride : LevelData.instance.gravityDirection;
-            if (gravity == Vector3.zero)
-            {
-                gravity = gravityDirectionSource;
-            }
-            else
-            {
-                gravity = Vector3.Lerp(Vector3.zero, gravityDirectionSource * gravityForce, Mathf.Abs(gravity.magnitude)/gravityForce + 1f/(gravityForce*4));
-            }
-        }
-        gravity = Vector3.ClampMagnitude(gravity, gravityForce);
-        velocity += gravity;
-    }
     private void ApplyMovement()
     {
         if ((isTouchingLeftWall && movement.x < 0) || (isTouchingRightWall && movement.x > 0))
@@ -175,6 +140,28 @@ public class Character : MonoBehaviour
         }
         velocity += jumpingForce;
     }
+    private void ApplyGravity()
+    {
+        float gravityForce = LevelData.instance.gravityForce * gravityMultiplier;
+        if (isGrounded)
+        {
+            gravity = Vector3.zero;
+        }
+        else
+        {
+            Vector3 gravityDirectionSource = isGravityOverrided ? gravityDirectionOverride : LevelData.instance.gravityDirection;
+            if (gravity == Vector3.zero)
+            {
+                gravity = gravityDirectionSource;
+            }
+            else
+            {
+                gravity = Vector3.Lerp(Vector3.zero, gravityDirectionSource * gravityForce, Mathf.Abs(gravity.magnitude)/gravityForce + 1f/(gravityForce*4));
+            }
+        }
+        gravity = Vector3.ClampMagnitude(gravity, gravityForce);
+        velocity += gravity;
+    }
     
     private void Move(Vector2 vector)
     {
@@ -208,12 +195,38 @@ public class Character : MonoBehaviour
             isJumping = false;
         }
     }
+
+    private void DrawRange()
+    {
+        Vector3 center = transform.position;
+        Utils.DrawCircle(center, rangeRadius, Color.darkGreen);
+        Vector3 point = new Vector3(6f, 6f, 0);
+        Vector3 clampedPoint = Utils.ClampPoint(point, center, rangeRadius);
+        Debug.Log("Clamped Point: " + clampedPoint);
+    }
     private void UpdateCheckers()
     {
         checkerBot = new Vector3(transform.position.x, collider.bounds.min.y, transform.position.z);
         checkerTop = new Vector3(transform.position.x, collider.bounds.max.y, transform.position.z);
         checkerLeft = new Vector3(collider.bounds.min.x, transform.position.y, transform.position.z);
         checkerRight = new Vector3(collider.bounds.max.x, transform.position.y, transform.position.z);
+        
+        if (!isJumping)
+        {
+            isGrounded = Physics.CheckBox(checkerBot, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
+            if (isGrounded)
+            {
+                jumpCount = jumpCountMax;
+            }
+        }
+        else
+        {
+            isGrounded = false;
+        }
+        
+        isTouchingLeftWall = Physics.CheckBox(checkerLeft, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
+        isTouchingRightWall = Physics.CheckBox(checkerRight, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
+        isTouchingTopWall = Physics.CheckBox(checkerTop, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
     }
     private void OnDrawGizmosSelected()
     {
@@ -234,10 +247,8 @@ public class Character : MonoBehaviour
     }
     private void InitComponents()
     {
-        // rigidbody = GetComponent<Rigidbody>();
-        // collider = GetComponent<Collider>();
-        rigidbody = GetComponent<Rigidbody2D>();
-        collider = GetComponent<Collider2D>();
+        rigidbody = GetComponent<Rigidbody>();
+        collider = GetComponent<Collider>();
     }
     private void InitVariables()
     {
