@@ -5,7 +5,7 @@ public class CameraLevel : MonoBehaviour
     void Update()
     {
         float totalX = 0f;
-        int count = 0;
+        int count = 1;
         foreach (var character in GameManager.instance.characters)
         {
             totalX += character.transform.position.x;

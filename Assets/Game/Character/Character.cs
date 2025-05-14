@@ -8,13 +8,13 @@ using Vector3 = UnityEngine.Vector3;
 // Le personnage peut se retrouver coincé dans certains angles.
 // Le personnage clip dans le sol quand il rentre dans le sol avec encore un peu de jumpingForce.
 // Utiliser deltaTime sur toutes les forces ?
-// TODO On doit normaliser la vitesse de la gravité peu importe son sens.
 
 public class Character : MonoBehaviour
 {
     private GameManager gameManager;
     public Rigidbody rigidbody { get; private set; }
     public Collider collider { get; private set; }
+    public SpriteRenderer spriteRenderer { get; private set; }
     
     
     // MODIFIERS
@@ -143,6 +143,9 @@ public class Character : MonoBehaviour
     }
     private void ApplyGravity()
     {
+        // TODO
+        // Vector3 angle = transform.rotation.eulerAngles;
+        // transform.rotation = Quaternion.Euler(angle.x, angle.y, angle.z);
         float gravityForce = LevelData.instance.gravityForce * gravityMultiplier;
         if (isGrounded)
         {
@@ -150,7 +153,7 @@ public class Character : MonoBehaviour
         }
         else
         {
-            Vector3 gravityDirectionSource = isGravityOverrided ? gravityDirectionOverride : LevelData.instance.gravityDirection;
+            Vector3 gravityDirectionSource = isGravityOverrided ? gravityDirectionOverride.normalized : LevelData.instance.gravityDirection.normalized;
             if (gravity == Vector3.zero)
             {
                 gravity = gravityDirectionSource;
@@ -171,9 +174,10 @@ public class Character : MonoBehaviour
         {
             isMoving = true;
             movement = new Vector3(horizontalMovement * moveSpeed, 0, 0);
-            float newRotation = horizontalMovement > 0 ? 0f : 180f;
-            // transform.rotation = new Quaternion(transform.rotation.x, newRotation, transform.rotation.z, 0);
-            transform.rotation = Quaternion.Euler(0, newRotation, 0);
+            
+            spriteRenderer.flipX = horizontalMovement < 0;
+            // float newRotation = horizontalMovement > 0 ? 0f : 180f;
+            // transform.rotation = Quaternion.Euler(0, newRotation, 0);
 
         }
         else
@@ -296,6 +300,7 @@ public class Character : MonoBehaviour
     {
         rigidbody = GetComponent<Rigidbody>();
         collider = GetComponent<Collider>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
     private void InitVariables()
     {

@@ -15,7 +15,7 @@ MonoBehaviour:
   name: Arena
   description: This is the classic arena
   gravityForce: 20
-  gravityDirection: {x: 0, y: -1}
+  gravityDirection: {x: -1, y: -1}
   thumbnail: {fileID: 0}
   scene:
     m_Handle: 0
