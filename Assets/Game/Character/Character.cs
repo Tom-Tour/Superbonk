@@ -7,6 +7,7 @@ using Vector3 = UnityEngine.Vector3;
 // Le personnage s'enfonce dans le sol à l'atterrissage avec une vélocité un peu trop forte, arrêtant complètement l'inertie.
 // Le personnage peut se retrouver coincé dans certains angles.
 // Le personnage clip dans le sol quand il rentre dans le sol avec encore un peu de jumpingForce.
+// Utiliser deltaTime sur toutes les forces ?
 // TODO On doit normaliser la vitesse de la gravité peu importe son sens.
 
 public class Character : MonoBehaviour
@@ -171,7 +172,9 @@ public class Character : MonoBehaviour
             isMoving = true;
             movement = new Vector3(horizontalMovement * moveSpeed, 0, 0);
             float newRotation = horizontalMovement > 0 ? 0f : 180f;
-            transform.rotation = new Quaternion(transform.rotation.x, newRotation, transform.rotation.z, 0);
+            // transform.rotation = new Quaternion(transform.rotation.x, newRotation, transform.rotation.z, 0);
+            transform.rotation = Quaternion.Euler(0, newRotation, 0);
+
         }
         else
         {
@@ -228,6 +231,50 @@ public class Character : MonoBehaviour
         isTouchingRightWall = Physics.CheckBox(checkerRight, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
         isTouchingTopWall = Physics.CheckBox(checkerTop, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
     }
+    /*
+    private void UpdateCheckers()
+    {
+        Bounds bounds = collider.bounds;
+        Vector3 center = bounds.center;
+        Vector3 size = bounds.size;
+
+        // Directions locales du personnage selon sa rotation
+        Vector3 down = -transform.up;
+        Vector3 up = transform.up;
+        Vector3 right = transform.right;
+        Vector3 left = -transform.right;
+
+        // Offsets pour placer les checkers
+        Vector3 verticalOffset = up * (size.y / 2f);
+        Vector3 horizontalOffset = right * (size.x / 2f);
+
+        checkerBot = center + down * (size.y / 2f);
+        checkerTop = center + up * (size.y / 2f);
+        checkerLeft = center + left * (size.x / 2f);
+        checkerRight = center + right * (size.x / 2f);
+
+        Vector3 checkerSizeBotTop = (right * (size.x * 0.98f) + transform.forward * (size.z * 0.98f)) * 0.5f;
+        Vector3 checkerSizeLeftRight = (up * (size.y * 0.98f) + transform.forward * (size.z * 0.98f)) * 0.5f;
+
+        if (!isJumping)
+        {
+            isGrounded = Physics.CheckBox(checkerBot, checkerSizeBotTop, transform.rotation, groundLayer);
+            if (isGrounded)
+            {
+                jumpCount = jumpCountMax;
+            }
+        }
+        else
+        {
+            isGrounded = false;
+        }
+
+        isTouchingTopWall = Physics.CheckBox(checkerTop, checkerSizeBotTop, transform.rotation, groundLayer);
+        isTouchingLeftWall = Physics.CheckBox(checkerLeft, checkerSizeLeftRight, transform.rotation, groundLayer);
+        isTouchingRightWall = Physics.CheckBox(checkerRight, checkerSizeLeftRight, transform.rotation, groundLayer);
+    }
+    */
+    
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
