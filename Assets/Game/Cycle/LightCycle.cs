@@ -13,7 +13,7 @@ public class LightCycle : MonoBehaviour
     void Update()
     {
         yRotation += rotationSpeed * Time.deltaTime;
-        Quaternion rotation = Quaternion.Euler(45f, yRotation, 0f);
+        Quaternion rotation = Quaternion.Euler(0f, yRotation, 0f);
         transform.rotation = rotation;
     }
 }
