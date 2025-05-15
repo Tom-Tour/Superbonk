@@ -42,6 +42,7 @@ public class Character : MonoBehaviour
     private Vector3 jumpingForce = Vector3.zero;
     private Vector3 movement = Vector3.zero;
     private Vector3 gravity = Vector3.zero;
+    private Vector3 gravityDirectionSource = Vector3.zero;
 
     // OTHERS
     public LayerMask groundLayer;
@@ -63,6 +64,7 @@ public class Character : MonoBehaviour
     {
         InitGameManager();
         gameManager.RegisterCharacter(this);
+        UpdateGravity();
     }
 
     void Update()
@@ -144,8 +146,6 @@ public class Character : MonoBehaviour
     private void ApplyGravity()
     {
         // TODO
-        // Vector3 angle = transform.rotation.eulerAngles;
-        // transform.rotation = Quaternion.Euler(angle.x, angle.y, angle.z);
         float gravityForce = LevelData.instance.gravityForce * gravityMultiplier;
         if (isGrounded)
         {
@@ -153,7 +153,6 @@ public class Character : MonoBehaviour
         }
         else
         {
-            Vector3 gravityDirectionSource = isGravityOverrided ? gravityDirectionOverride.normalized : LevelData.instance.gravityDirection.normalized;
             if (gravity == Vector3.zero)
             {
                 gravity = gravityDirectionSource;
@@ -175,9 +174,9 @@ public class Character : MonoBehaviour
             isMoving = true;
             movement = new Vector3(horizontalMovement * moveSpeed, 0, 0);
             
-            spriteRenderer.flipX = horizontalMovement < 0;
-            // float newRotation = horizontalMovement > 0 ? 0f : 180f;
-            // transform.rotation = Quaternion.Euler(0, newRotation, 0);
+            // spriteRenderer.flipX = horizontalMovement < 0;
+            float newRotation = horizontalMovement > 0 ? 0f : 180f;
+            transform.rotation = Quaternion.Euler(0, newRotation, 0);
 
         }
         else
@@ -213,11 +212,12 @@ public class Character : MonoBehaviour
     }
     private void UpdateCheckers()
     {
+
         checkerBot = new Vector3(transform.position.x, collider.bounds.min.y, transform.position.z);
         checkerTop = new Vector3(transform.position.x, collider.bounds.max.y, transform.position.z);
         checkerLeft = new Vector3(collider.bounds.min.x, transform.position.y, transform.position.z);
         checkerRight = new Vector3(collider.bounds.max.x, transform.position.y, transform.position.z);
-        
+
         if (!isJumping)
         {
             isGrounded = Physics.CheckBox(checkerBot, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
@@ -230,7 +230,7 @@ public class Character : MonoBehaviour
         {
             isGrounded = false;
         }
-        
+
         isTouchingLeftWall = Physics.CheckBox(checkerLeft, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
         isTouchingRightWall = Physics.CheckBox(checkerRight, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
         isTouchingTopWall = Physics.CheckBox(checkerTop, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
@@ -238,6 +238,9 @@ public class Character : MonoBehaviour
     /*
     private void UpdateCheckers()
     {
+        float angle = Vector2.SignedAngle(Vector2.down, gravityDirectionSource);
+        transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, angle);
+
         Bounds bounds = collider.bounds;
         Vector3 center = bounds.center;
         Vector3 size = bounds.size;
@@ -247,10 +250,6 @@ public class Character : MonoBehaviour
         Vector3 up = transform.up;
         Vector3 right = transform.right;
         Vector3 left = -transform.right;
-
-        // Offsets pour placer les checkers
-        Vector3 verticalOffset = up * (size.y / 2f);
-        Vector3 horizontalOffset = right * (size.x / 2f);
 
         checkerBot = center + down * (size.y / 2f);
         checkerTop = center + up * (size.y / 2f);
@@ -309,5 +308,10 @@ public class Character : MonoBehaviour
     private void InitGameManager()
     {
         gameManager = GameManager.instance;
+    }
+
+    private void UpdateGravity()
+    {
+        gravityDirectionSource = isGravityOverrided ? gravityDirectionOverride.normalized : LevelData.instance.gravityDirection.normalized;
     }
 }
