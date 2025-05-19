@@ -1,7 +1,5 @@
 using UnityEngine;
-using Quaternion = UnityEngine.Quaternion;
-using Vector2 = UnityEngine.Vector2;
-using Vector3 = UnityEngine.Vector3;
+using Unity.Netcode;
 
 // Bug à corriger :
 // Le personnage s'enfonce dans le sol à l'atterrissage avec une vélocité un peu trop forte, arrêtant complètement l'inertie.
@@ -9,7 +7,7 @@ using Vector3 = UnityEngine.Vector3;
 // Le personnage clip dans le sol quand il rentre dans le sol avec encore un peu de jumpingForce.
 // Utiliser deltaTime sur toutes les forces ?
 
-public class Character : MonoBehaviour
+public class Character : NetworkBehaviour
 {
     private GameManager gameManager;
     public Rigidbody rigidbody { get; private set; }
