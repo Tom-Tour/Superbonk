@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -21,6 +22,26 @@ public class PlayerCursor : NetworkBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.color = color;
     }
+
+    private void Start()
+    {
+        StartCoroutine(Login());
+    }
+
+    private IEnumerator Login()
+    {
+        while (!(NetworkManager.Singleton.IsClient && NetworkManager.Singleton.IsConnectedClient))
+        {
+            Debug.Log("Connecting..");
+            yield return new WaitForSeconds(4f);
+        }
+        if (!IsSpawned)
+        {
+            SelectionCharacter.Instance.RequestSpawnPlayerCursorRpc(this);
+        }
+        Debug.Log("Connected !");
+    }
+
 
     private void Update()
     {

@@ -12,6 +12,6 @@ public class SelectionCharacterSlot : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Debug.Log("x: " + x + " | y: " + y);
+        SelectionCharacter.Instance.ClickedOnCharacter(x, y);
     }
 }
