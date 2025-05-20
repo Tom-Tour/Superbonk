@@ -6,7 +6,7 @@ public class SelectionCharacter : MonoBehaviour
 {
     public static SelectionCharacter Instance { get; private set; }
     private PlayerInputManager playerInputManager;
-    private PlayerCursor playerCursor;
+    private PlayerCursor playerCursorPrefab;
 
     private void Awake()
     {
@@ -17,38 +17,103 @@ public class SelectionCharacter : MonoBehaviour
         }
         Instance = this;
         playerInputManager = GetComponent<PlayerInputManager>();
-        playerCursor = playerInputManager.playerPrefab.GetComponent<PlayerCursor>();
+        playerCursorPrefab = playerInputManager.playerPrefab.GetComponent<PlayerCursor>();
         playerInputManager.joinBehavior = PlayerJoinBehavior.JoinPlayersManually;
     }
 
     
+    
     private void OnEnable()
     {
-        // playerInputManager.onPlayerJoined += OnPlayerJoined;
+        playerInputManager.onPlayerJoined += OnPlayerJoined;
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientJoined;
     }
 
     private void OnDisable()
     {
-        // playerInputManager.onPlayerJoined -= OnPlayerJoined;
+        playerInputManager.onPlayerJoined -= OnPlayerJoined;
         NetworkManager.Singleton.OnClientConnectedCallback -= OnClientJoined;
     }
 
+    /*
     void OnClientJoined(ulong clientId)
     {
         Debug.Log("Client " + clientId + " joined.");
+        if (NetworkManager.Singleton.IsServer)
+        {
+            if (!NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject)
+            {
+                var playerCursor = Instantiate(playerCursorPrefab);
+                playerCursor.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
+                int newColorID = Random.Range(0, Palette.rainbowColors.Length);
+                ChangePlayerColorRpc(playerCursor, newColorID);
+            }
+        }
     }
+
+    [ClientRpc]
+    void ChangePlayerColorRpc(PlayerCursor playerCursor,  int newColorID)
+    {
+        playerCursor.ChangeColor(newColorID);
+    }
+    */
+    // TODO
+    void OnClientJoined(ulong clientId)
+    {
+        Debug.Log("Client " + clientId + " joined.");
+
+        if (NetworkManager.Singleton.IsServer)
+        {
+            if (!NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject)
+            {
+                var playerCursor = Instantiate(playerCursorPrefab);
+                var netObj = playerCursor.GetComponent<NetworkObject>();
+                netObj.SpawnAsPlayerObject(clientId);
+
+                int newColorID = Random.Range(0, Palette.rainbowColors.Length);
+
+                // Envoie l'ID réseau et la couleur à tous les clients
+                ChangePlayerColorRpc(netObj.NetworkObjectId, newColorID);
+            }
+        }
+    }
+
+    [ClientRpc]
+    void ChangePlayerColorRpc(ulong networkObjectId, int newColorID)
+    {
+        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out var netObj))
+        {
+            var playerCursor = netObj.GetComponent<PlayerCursor>();
+            playerCursor.ChangeColor(newColorID);
+        }
+        else
+        {
+            Debug.LogWarning($"Objet réseau non trouvé pour ID {networkObjectId}");
+        }
+    }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     void OnPlayerJoined(PlayerInput playerInput)
     {
         Debug.Log("OnPlayerJoined");
+        /*
         if (NetworkManager.Singleton.IsServer)
         {
             PlayerCursor _playerCursor = Instantiate(playerCursor);
             _playerCursor.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInput.user.id);
             playerInput.gameObject.SetActive(false);
         }
+        */
     }
 
     

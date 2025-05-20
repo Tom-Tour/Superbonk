@@ -18,14 +18,17 @@ public class PlayerCursor : NetworkBehaviour
 
     private void Awake()
     {
-        color = Palette.rainbowColors[Random.Range(0, Palette.rainbowColors.Length)];
         spriteRenderer = GetComponent<SpriteRenderer>();
-        spriteRenderer.color = color;
     }
 
     private void Start()
     {
-        StartCoroutine(Login());
+        // StartCoroutine(Login());
+        if (IsServer)
+        {
+            // GetComponent<NetworkObject>().Spawn();
+            // GetComponent<NetworkObject>().SpawnAsPlayerObject(GetComponent<PlayerInput>().user.id);
+        }
     }
 
     private IEnumerator Login()
@@ -50,15 +53,28 @@ public class PlayerCursor : NetworkBehaviour
     
     void OnMove(InputValue value)
     {
+        if (!IsOwner)
+        {
+            return;
+        }
         direction = value.Get<Vector2>().normalized;
         isReady = false;
     }
 
     void OnJump(InputValue value)
     {
+        if (!IsOwner)
+        {
+            return;
+        }
         if (value.isPressed)
         {
             isReady = !isReady;
         }
+    }
+
+    public void ChangeColor(int colorID)
+    {
+        spriteRenderer.color = Palette.rainbowColors[colorID];
     }
 }
