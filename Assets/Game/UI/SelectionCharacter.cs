@@ -57,28 +57,7 @@ public class SelectionCharacter : MonoBehaviour
         playerCursor.ChangeColor(newColorID);
     }
     */
-    // TODO
-    void OnClientJoined(ulong clientId)
-    {
-        Debug.Log("Client " + clientId + " joined.");
-
-        if (NetworkManager.Singleton.IsServer)
-        {
-            if (!NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject)
-            {
-                var playerCursor = Instantiate(playerCursorPrefab);
-                var netObj = playerCursor.GetComponent<NetworkObject>();
-                netObj.SpawnAsPlayerObject(clientId);
-
-                int newColorID = Random.Range(0, Palette.rainbowColors.Length);
-
-                // Envoie l'ID réseau et la couleur à tous les clients
-                ChangePlayerColorRpc(netObj.NetworkObjectId, newColorID);
-            }
-        }
-    }
-
-    [ClientRpc]
+    /*
     void ChangePlayerColorRpc(ulong networkObjectId, int newColorID)
     {
         if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out var netObj))
@@ -91,7 +70,34 @@ public class SelectionCharacter : MonoBehaviour
             Debug.LogWarning($"Objet réseau non trouvé pour ID {networkObjectId}");
         }
     }
+    */
+    
+    void OnClientJoined(ulong clientId)
+    {
+        Debug.Log("Client " + clientId + " joined.");
 
+        if (NetworkManager.Singleton.IsServer)
+        {
+            if (!NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject)
+            { 
+                // TODO
+                PlayerInput playerInput = playerInputManager.JoinPlayer(0);
+                
+                PlayerCursor playerCursor = Instantiate(playerCursorPrefab);
+                NetworkObject playerCursorNetwork = playerCursor.GetComponent<NetworkObject>();
+                playerCursorNetwork.SpawnAsPlayerObject(clientId);
+                int newColorID = Random.Range(0, Palette.rainbowColors.Length);
+                // ChangePlayerColorRpc(playerCursorNetwork.NetworkObjectId, newColorID);
+                ChangePlayerColorRpc(playerCursor, newColorID);
+            }
+        }
+    }
+
+    [ClientRpc]
+    void ChangePlayerColorRpc(PlayerCursor playerCursor,  int newColorID)
+    {
+        playerCursor.ChangeColor(newColorID);
+    }
     
     
     
