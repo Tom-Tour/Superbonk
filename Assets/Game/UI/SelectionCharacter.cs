@@ -17,11 +17,9 @@ public class SelectionCharacter : MonoBehaviour
         }
         Instance = this;
         playerInputManager = GetComponent<PlayerInputManager>();
+        // playerInputManager.joinBehavior = PlayerJoinBehavior.JoinPlayersManually;
         playerCursorPrefab = playerInputManager.playerPrefab.GetComponent<PlayerCursor>();
-        playerInputManager.joinBehavior = PlayerJoinBehavior.JoinPlayersManually;
     }
-
-    
     
     private void OnEnable()
     {
@@ -76,12 +74,13 @@ public class SelectionCharacter : MonoBehaviour
     {
         Debug.Log("Client " + clientId + " joined.");
 
+        /*
         if (NetworkManager.Singleton.IsServer)
         {
             if (!NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject)
             { 
                 // TODO
-                PlayerInput playerInput = playerInputManager.JoinPlayer(0);
+                // PlayerInput playerInput = playerInputManager.JoinPlayer(0);
                 
                 PlayerCursor playerCursor = Instantiate(playerCursorPrefab);
                 NetworkObject playerCursorNetwork = playerCursor.GetComponent<NetworkObject>();
@@ -91,6 +90,7 @@ public class SelectionCharacter : MonoBehaviour
                 ChangePlayerColorRpc(playerCursor, newColorID);
             }
         }
+        */
     }
 
     [ClientRpc]
@@ -112,6 +112,18 @@ public class SelectionCharacter : MonoBehaviour
     void OnPlayerJoined(PlayerInput playerInput)
     {
         Debug.Log("OnPlayerJoined");
+        if (!NetworkManager.Singleton.IsConnectedClient && !NetworkManager.Singleton.IsHost)
+        {
+            return;
+        }
+        if (NetworkManager.Singleton.IsServer)
+        {
+            PlayerCursor playerInstance = Instantiate(playerCursorPrefab, Vector3.zero, Quaternion.identity);
+            var netObj = playerInstance.GetComponent<NetworkObject>();
+            netObj.SpawnWithOwnership((ulong)playerInput.user.id.GetHashCode());
+            Destroy(playerInput.gameObject);
+        }
+        
         /*
         if (NetworkManager.Singleton.IsServer)
         {
