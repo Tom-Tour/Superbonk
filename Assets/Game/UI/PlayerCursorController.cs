@@ -6,6 +6,7 @@ public class PlayerCursorController : NetworkBehaviour
 {
     // REFERENCES
     private PlayerInput playerInput;
+    private NetworkObject networkObject;
 
     // MODIFIERS
     private float speed = 4;
@@ -26,9 +27,14 @@ public class PlayerCursorController : NetworkBehaviour
     private void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
+        networkObject = GetComponent<NetworkObject>();
     }
     private void Start()
     {
+        if (isLocal)
+        {
+            networkObject.enabled = false;
+        }
         initialized = true;
         Register();
     }

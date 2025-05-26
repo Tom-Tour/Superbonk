@@ -45,7 +45,9 @@ public class LobbyManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)] public void RequestSpawnPlayerServerRpc(ServerRpcParams rpcParams = default)
     {
         ulong clientId = rpcParams.Receive.SenderClientId;
-        GameObject playerCursor = Instantiate(Resources.Load<GameObject>("PlayerCursor"));
+        GameObject playerCursorPrefab = Resources.Load<GameObject>("PlayerCursor");
+        GameObject playerCursor = Instantiate(playerCursorPrefab);
+        playerCursor.name = playerCursorPrefab.name + "Network";
         playerCursor.GetComponent<PlayerCursorController>().isLocal = false;
         NetworkObject networkObject = playerCursor.GetComponent<NetworkObject>();
         networkObject.SpawnAsPlayerObject(clientId, true);
