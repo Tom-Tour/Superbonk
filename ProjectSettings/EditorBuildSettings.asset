@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Boot/Boot.unity
     guid: ccf004bfcc4c62c42b748bbe748dffbc
   - enabled: 1
+    path: Assets/Scenes/Lobby/Lobby.unity
+    guid: de8aa5fb557538c40b15e642c2001bb5
+  - enabled: 1
     path: Assets/Scenes/SelectionCharacter/SelectionCharacter.unity
     guid: 104c0e0a875b67e478e38dd9424a319c
   - enabled: 1

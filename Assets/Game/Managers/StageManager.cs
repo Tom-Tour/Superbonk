@@ -16,6 +16,6 @@ public class StageManager : MonoBehaviour
     }
     void Start()
     {
-        SceneManager.LoadScene("SelectionCharacter");
+        SceneManager.LoadScene("Lobby");
     }
 }

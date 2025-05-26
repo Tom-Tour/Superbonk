@@ -40,7 +40,7 @@ public class PlayerCursor : NetworkBehaviour
         }
         if (!IsSpawned)
         {
-            SelectionCharacter.Instance.RequestSpawnPlayerCursorRpc(this);
+            // SelectionCharacter.Instance.RequestSpawnPlayerCursorServerRpc(this);
         }
         Debug.Log("Connected !");
     }
@@ -53,7 +53,7 @@ public class PlayerCursor : NetworkBehaviour
     
     void OnMove(InputValue value)
     {
-        if (!IsOwner)
+        if (NetworkManager.Singleton.IsListening && !IsOwner)
         {
             return;
         }
@@ -63,7 +63,7 @@ public class PlayerCursor : NetworkBehaviour
 
     void OnJump(InputValue value)
     {
-        if (!IsOwner)
+        if (NetworkManager.Singleton.IsListening && !IsOwner)
         {
             return;
         }
