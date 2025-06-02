@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 1912313163141087174}
   - component: {fileID: 3392873978931204128}
   - component: {fileID: 2552254141457993810}
-  - component: {fileID: 6654228172970424265}
+  - component: {fileID: -8881694529108712752}
   - component: {fileID: 7868611534269662803}
   - component: {fileID: 1535036203233472643}
   - component: {fileID: 8509892935882561544}
@@ -164,7 +164,7 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
---- !u!114 &6654228172970424265
+--- !u!114 &-8881694529108712752
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -173,11 +173,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 8922723843686180553}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d096a5293315a8d4d94b52d44a4c77bf, type: 3}
+  m_Script: {fileID: 11500000, guid: 86e6c25d215582e4db89cafeda1d5dd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  isLocal: 1
 --- !u!114 &7868611534269662803
 MonoBehaviour:
   m_ObjectHideFlags: 0

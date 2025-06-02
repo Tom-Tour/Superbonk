@@ -1,28 +1,29 @@
+using System;
 using System.Collections.Generic;
-using System.Collections;
-using System.Linq;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Unity.Netcode;
 
 public class InputHandler : MonoBehaviour
 {
     public static InputHandler Instance { get; private set; }
     private PlayerInputManager playerInputManager;
-    private List<PlayerInput> localPlayerInputs = new List<PlayerInput>();
-    private List<PlayerInput> networkPlayerInputs = new List<PlayerInput>();
-
-    private void OnEnable()
+    private List<PlayerInput> playerInputs = new List<PlayerInput>();
+    public static event Action OnPlayerJoinedNetwork;
+    void OnEnable()
     {
+        UI_NetworkPanel.OnNetworkStart += ClearLocalPlayerInput;
         playerInputManager.onPlayerJoined += OnPlayerJoined;
         playerInputManager.onPlayerLeft += OnPlayerLeft;
-        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
     }
-    private void OnDisable()
+    void OnDisable()
     {
-        playerInputManager.onPlayerJoined -= OnPlayerJoined;
-        playerInputManager.onPlayerLeft -= OnPlayerLeft;
-        NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+        UI_NetworkPanel.OnNetworkStart -= ClearLocalPlayerInput;
+        if (playerInputManager)
+        {
+            playerInputManager.onPlayerJoined -= OnPlayerJoined;
+            playerInputManager.onPlayerLeft -= OnPlayerLeft;
+        }
     }
     private void Awake()
     {
@@ -36,103 +37,39 @@ public class InputHandler : MonoBehaviour
         
         playerInputManager = GetComponent<PlayerInputManager>();
     }
-    private void Start()
-    {
-        StartCoroutine(TryToSpawnPlayers());
-    }
     private void OnPlayerJoined(PlayerInput playerInput)
     {
         int playerIndex = playerInput.playerIndex;
         Debug.Log($"Player {playerIndex} joined using {playerInput.currentControlScheme}");
+        if (!playerInputs.Contains(playerInput))
+        {
+            playerInputs.Add(playerInput);
+            if (NetworkManager.Singleton.IsListening)
+            {
+                // TODO Ne pas faire spawn en boucle..
+                // PlayerInputManager.instance.joinBehavior = PlayerJoinBehavior.JoinPlayersManually;
+                OnPlayerJoinedNetwork?.Invoke();
+            }
+        }
     }
     private void OnPlayerLeft(PlayerInput playerInput)
     {
         int playerIndex = playerInput.playerIndex;
         Debug.Log($"Player {playerIndex} leaving using {playerInput.currentControlScheme}");
-    }
-    public void RegisterLocalPlayerInput(PlayerInput playerInput)
-    {
-        if (!localPlayerInputs.Contains(playerInput))
+        if (playerInputs.Contains(playerInput))
         {
-            Debug.Log("Registering local player " + playerInput.playerIndex);
-            localPlayerInputs.Add(playerInput);
+            playerInputs.Remove(playerInput);
         }
     }
-    public void UnregisterLocalPlayerInput(PlayerInput playerInput)
+    private void ClearLocalPlayerInput()
     {
-        if (localPlayerInputs.Contains(playerInput))
+        Debug.Log($"Clear local player input");
+        int playerInputsCount = playerInputs.Count;
+        for (int i = 0; i < playerInputsCount; i++)
         {
-            Debug.Log("Unregistering local player " + playerInput.playerIndex);
-            localPlayerInputs.Remove(playerInput);
+            Destroy(playerInputs[0].gameObject);
+            // DestroyImmediate(playerInputs[0].gameObject);
         }
-    }
-    public void RegisterNetworkPlayerInput(PlayerInput playerInput)
-    {
-        if (!networkPlayerInputs.Contains(playerInput))
-        {
-            Debug.Log("Registering network player " + playerInput.playerIndex);
-            networkPlayerInputs.Add(playerInput);
-        }
-    }
-    public void UnregisterNetworkPlayerInput(PlayerInput playerInput)
-    {
-        if (networkPlayerInputs.Contains(playerInput))
-        {
-            Debug.Log("Unregistering network player " + playerInput.playerIndex);
-            networkPlayerInputs.Remove(playerInput);
-        }
-    }
-    private void OnClientConnected(ulong clientId)
-    {
-        //
-    }
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    // TODO
-    private IEnumerator TryToSpawnPlayers()
-    {
-        while (true)
-        {
-            if (NetworkManager.Singleton.IsListening)
-            {
-                if (localPlayerInputs != null && localPlayerInputs.Count > 0)
-                {
-                    Debug.Log("Try to spawn " + localPlayerInputs.Count + " new players in the server..");
-                    foreach (PlayerInput playerInput in localPlayerInputs.ToList())
-                    { 
-                        // playerInput.gameObject.SetActive(false);
-                        Destroy(playerInput.gameObject);
-                        LobbyManager.Instance.RequestSpawnPlayerServerRpc();
-                    }
-                }
-            }
-            else
-            {
-                if (networkPlayerInputs != null && networkPlayerInputs.Count > 0)
-                {
-                    Debug.Log("Try to spawn " + networkPlayerInputs.Count + " new players in local..");
-                    foreach (PlayerInput playerInput in networkPlayerInputs.ToList())
-                    { 
-                        // playerInput.gameObject.SetActive(false);
-                        Destroy(playerInput.gameObject);
-                        GameObject playerCursor = Instantiate(Resources.Load<GameObject>("PlayerCursor"));
-                    }
-                }
-            }
-            yield return new WaitForSeconds(4f);
-        }
+        playerInputs.Clear();
     }
 }

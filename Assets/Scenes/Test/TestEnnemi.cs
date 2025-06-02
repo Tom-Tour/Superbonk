@@ -10,10 +10,10 @@ public class TestEnnemi : MonoBehaviour
     void Awake()
     {
         GameObject visual = new GameObject();
-        visual.transform.rotation = Quaternion.Euler(90, 0, 0);
-        visual.name = "visual";
+        visual.name = "Visual";
         visual.transform.parent = transform;
         visual.transform.localPosition = Vector3.zero;
+        visual.transform.localRotation = Quaternion.Euler(90, 0, 0);
         visual.transform.localScale = new Vector3(.5f, .5f, .5f);
         spriteRenderer = visual.AddComponent<SpriteRenderer>();
         spriteRenderer.sortingOrder = 5;

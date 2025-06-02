@@ -5121,6 +5121,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b55a0c551d9aa5446b0fe5d08e9ae52b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -10924,6 +10925,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c39ab32c086d4649a8a047cc5e2ad36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -17199,7 +17201,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 349530255986961038, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5297845716275828730, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
       propertyPath: m_LocalPosition.x

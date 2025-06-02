@@ -80,22 +80,22 @@ public class PlayerCursorController : NetworkBehaviour
     {
         if (isLocal)
         {
-            InputHandler.Instance.RegisterLocalPlayerInput(playerInput);
+            InputHandler_.Instance.RegisterLocalPlayerInput(playerInput);
         }
         else
         {
-            InputHandler.Instance.RegisterNetworkPlayerInput(playerInput);
+            InputHandler_.Instance.RegisterNetworkPlayerInput(playerInput);
         }
     }
     private void Unregister()
     {
         if (isLocal)
         {
-            InputHandler.Instance.UnregisterLocalPlayerInput(playerInput);
+            InputHandler_.Instance.UnregisterLocalPlayerInput(playerInput);
         }
         else
         {
-            InputHandler.Instance.UnregisterNetworkPlayerInput(playerInput);
+            InputHandler_.Instance.UnregisterNetworkPlayerInput(playerInput);
         }
     }
 }
