@@ -6,6 +6,7 @@ public class CursorController : NetworkBehaviour
 {
     // REFERENCES
     private PlayerInput playerInput;
+    private Camera camera;
     
     // MODIFIERS
     private float speed = 4;
@@ -15,9 +16,11 @@ public class CursorController : NetworkBehaviour
     private bool IsUsingMouseAndKeyboard = false;
     private bool isReady = false;
     private bool isLocal = true;
+    private Vector2 lastMousePosition;
 
     private void Awake()
     {
+        camera = Camera.main;
         playerInput = GetComponent<PlayerInput>();
         IsUsingMouseAndKeyboard = playerInput.currentControlScheme == "Keyboard&Mouse";
     }
@@ -43,14 +46,14 @@ public class CursorController : NetworkBehaviour
             transform.Translate(direction * (speed * Time.deltaTime));
             if (IsUsingMouseAndKeyboard)
             {
-                // TODO : Check mouse last position, if last position different than actual position then move mouse.
-                /*
                 Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
-                Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
-                mouseWorldPos.z = 0;
-
-                transform.position = Vector3.Lerp(transform.position, mouseWorldPos, Time.deltaTime * speed);
-                */
+                if (lastMousePosition != mouseScreenPos)
+                {
+                    Vector3 mouseWorldPos = camera.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, camera.nearClipPlane));
+                    mouseWorldPos.z = 0;
+                    transform.position = mouseWorldPos;
+                    lastMousePosition = mouseScreenPos;
+                }
             }
         }
     }
@@ -63,6 +66,16 @@ public class CursorController : NetworkBehaviour
         }
     }
     private void OnJump(InputValue value)
+    {
+        if (isLocal)
+        {
+            if (value.isPressed)
+            {
+                isReady = !isReady;
+            }
+        }
+    }
+    private void OnFire(InputValue value)
     {
         if (isLocal)
         {

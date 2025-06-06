@@ -1,6 +1,8 @@
+using System;
+
 namespace Game.Networking
 {
-    public struct PlayerSlot
+    public struct PlayerSlot : IEquatable<PlayerSlot>
     {
         public readonly ulong ClientId;
         public readonly int LocalIndex;
@@ -9,6 +11,19 @@ namespace Game.Networking
         {
             ClientId = clientId;
             LocalIndex = localIndex;
+        }
+
+        public bool Equals(PlayerSlot other)
+        {
+            return ClientId == other.ClientId && LocalIndex == other.LocalIndex;
+        }
+        public override bool Equals(object obj)
+        {
+            return obj is PlayerSlot other && Equals(other);
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(ClientId, LocalIndex);
         }
     }
 }

@@ -13,6 +13,9 @@ public class InputHandler : MonoBehaviour
     private List<int> playerIndexes = new List<int>();
     private List<int> networkedPlayerIndexes = new List<int>();
     public static event Action<int> OnPlayerJoinedNetwork;
+    public static event Action<int> OnPlayerLeavedNetwork;
+    
+    
     void OnEnable()
     {
         UI_NetworkPanel.OnNetworkStart += ClearLocalPlayerInput;
@@ -92,6 +95,7 @@ public class InputHandler : MonoBehaviour
             {
                 Debug.Log($"Player {playerIndex} leaving using {playerInput.currentControlScheme} on NETWORK");
                 networkedPlayerIndexes.Remove(playerIndex);
+                OnPlayerLeavedNetwork?.Invoke(playerIndex);
             }
         }
     }

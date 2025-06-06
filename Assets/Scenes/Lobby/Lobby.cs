@@ -8,8 +8,10 @@ using Game.Networking;
 public class Lobby : NetworkBehaviour
 {
     private GameObject playerCursorPrefab;
-    private List<PlayerSlot> players = new List<PlayerSlot>(8);
+    private List<PlayerSlot> playerSlots = new List<PlayerSlot>(8);
     private List<int> playerIndexes = new List<int>(4);
+    
+    private int maxPlayers = 4;
 
     
     private void Awake()
@@ -19,25 +21,53 @@ public class Lobby : NetworkBehaviour
     private void OnEnable()
     {
         InputHandler.OnPlayerJoinedNetwork += OnPlayerJoinedNetwork;
+        InputHandler.OnPlayerLeavedNetwork += OnPlayerLeavedNetwork;
     }
     private void OnDisable()
     {
         InputHandler.OnPlayerJoinedNetwork -= OnPlayerJoinedNetwork;
+        InputHandler.OnPlayerLeavedNetwork -= OnPlayerLeavedNetwork;
     }
 
     private void OnPlayerJoinedNetwork(int playerIndex)
     {
         RequestSpawnPlayerServerRpc(playerIndex);
     }
+    private void OnPlayerLeavedNetwork(int playerIndex)
+    {
+        RequestDespawnPlayerServerRpc(playerIndex);
+    }
     [ServerRpc(RequireOwnership = false)]
     private void RequestSpawnPlayerServerRpc(int localPlayerIndex, ServerRpcParams rpcParams = default)
     {
         ulong clientId = rpcParams.Receive.SenderClientId;
+        
+        PlayerSlot playerSlot = new PlayerSlot(clientId,  localPlayerIndex);
+        if (playerSlots.Contains(playerSlot) || playerSlots.Count >= maxPlayers)
+        {
+            return;
+        }
+        // TODO ...
+        Debug.Log($"Player {playerSlot.ClientId}.{playerSlot.LocalIndex} has been spawned.");
+        playerSlots.Add(playerSlot);
+        
         GameObject cursor = Instantiate(playerCursorPrefab);
         // GameObject cursor = PlayerInput.Instantiate(playerCursorPrefab).gameObject;
         NetworkObject networkObject = cursor.GetComponent<NetworkObject>();
         // networkObject.SpawnWithOwnership(clientId);
         networkObject.SpawnAsPlayerObject(clientId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestDespawnPlayerServerRpc(int localPlayerIndex, ServerRpcParams rpcParams = default)
+    {
+        ulong clientId = rpcParams.Receive.SenderClientId;
+        PlayerSlot playerSlot = new PlayerSlot(clientId,  localPlayerIndex);
+        if (playerSlots.Contains(playerSlot))
+        {
+            Debug.Log($"Player {playerSlot.ClientId}.{playerSlot.LocalIndex} has been despawned.");
+            playerSlots.Remove(playerSlot);
+        }
     }
     /*
     private void OnPlayerJoinedNetwork(PlayerInput playerInput)
