@@ -29,7 +29,7 @@ public class UI_NetworkPanel : MonoBehaviour
     
     private void OnEnable()
     {
-        StartCoroutine(SubscirbeToNetwork());
+        StartCoroutine(SubscribeToNetwork());
         RegisterButtonListeners();
     }
     private void OnDisable()
@@ -56,7 +56,7 @@ public class UI_NetworkPanel : MonoBehaviour
         inputIP = transform.Find("Field_IP/InputField_IP")?.GetComponent<TMP_InputField>();
         inputPort = transform.Find("Field_Port/InputField_Port")?.GetComponent<TMP_InputField>();
     }
-    private IEnumerator SubscirbeToNetwork()
+    private IEnumerator SubscribeToNetwork()
     {
         if (subscribed)
         {

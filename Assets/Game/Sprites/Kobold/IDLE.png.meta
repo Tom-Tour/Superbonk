@@ -104,9 +104,9 @@ TextureImporter:
         y: 0
         width: 148
         height: 96
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      alignment: 9
+      pivot: {x: 0.3918919, y: 0.052083336}
+      border: {x: 0, y: 5, z: 32, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -126,9 +126,9 @@ TextureImporter:
         y: 0
         width: 148
         height: 96
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      alignment: 9
+      pivot: {x: 0.3918919, y: 0.052083332}
+      border: {x: 0, y: 5, z: 32, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -148,9 +148,9 @@ TextureImporter:
         y: 0
         width: 148
         height: 96
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      alignment: 9
+      pivot: {x: 0.3918919, y: 0.052083332}
+      border: {x: 0, y: 5, z: 32, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -170,9 +170,9 @@ TextureImporter:
         y: 0
         width: 148
         height: 96
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      alignment: 9
+      pivot: {x: 0.3918919, y: 0.052083332}
+      border: {x: 0, y: 5, z: 32, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -192,9 +192,9 @@ TextureImporter:
         y: 0
         width: 148
         height: 96
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      alignment: 9
+      pivot: {x: 0.3918919, y: 0.052083332}
+      border: {x: 0, y: 5, z: 32, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -214,9 +214,9 @@ TextureImporter:
         y: 0
         width: 148
         height: 96
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      alignment: 9
+      pivot: {x: 0.3918919, y: 0.052083332}
+      border: {x: 0, y: 5, z: 32, w: 0}
       customData: 
       outline: []
       physicsShape: []
