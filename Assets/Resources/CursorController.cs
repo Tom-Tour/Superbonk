@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Unity.Netcode;
@@ -7,13 +8,14 @@ public class CursorController : NetworkBehaviour
     // REFERENCES
     private PlayerInput playerInput;
     private Camera camera;
+    private NetworkObject networkObject;
     
     // MODIFIERS
     private float speed = 4;
     
     // INFORMATIVES
     private Vector2 direction = Vector2.zero;
-    private bool IsUsingMouseAndKeyboard = false;
+    private bool isUsingMouseAndKeyboard = false;
     private bool isReady = false;
     private bool isLocal = true;
     private Vector2 lastMousePosition;
@@ -22,11 +24,10 @@ public class CursorController : NetworkBehaviour
     {
         camera = Camera.main;
         playerInput = GetComponent<PlayerInput>();
-        IsUsingMouseAndKeyboard = playerInput.currentControlScheme == "Keyboard&Mouse";
+        isUsingMouseAndKeyboard = playerInput.currentControlScheme == "Keyboard&Mouse";
     }
     public override void OnNetworkSpawn()
     {
-        base.OnNetworkSpawn();
         if (!IsOwner)
         {
             isLocal = false;
@@ -35,7 +36,6 @@ public class CursorController : NetworkBehaviour
     }
     public override void OnNetworkDespawn()
     {
-        base.OnNetworkDespawn();
         isLocal = true;
         playerInput.enabled = true;
     }
@@ -44,7 +44,7 @@ public class CursorController : NetworkBehaviour
         if (isLocal)
         {
             transform.Translate(direction * (speed * Time.deltaTime));
-            if (IsUsingMouseAndKeyboard)
+            if (isUsingMouseAndKeyboard)
             {
                 Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
                 if (lastMousePosition != mouseScreenPos)

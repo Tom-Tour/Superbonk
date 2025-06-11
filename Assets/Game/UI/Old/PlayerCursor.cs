@@ -75,6 +75,6 @@ public class PlayerCursor : NetworkBehaviour
 
     public void ChangeColor(int colorID)
     {
-        spriteRenderer.color = Palette.rainbowColors[colorID];
+        spriteRenderer.color = Palette.colors[colorID];
     }
 }
