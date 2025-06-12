@@ -14,7 +14,7 @@ public class CharacterAnimator : MonoBehaviour
     {
         if (character.isGrounded)
         {
-            if (character.isMoving)
+            if (character.IsMoving)
             {
                 animator.Play($"Run");
             }
@@ -25,7 +25,7 @@ public class CharacterAnimator : MonoBehaviour
         }
         else
         {
-            if (character.isJumping)
+            if (character.IsJumping)
             {
                 if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
                 {

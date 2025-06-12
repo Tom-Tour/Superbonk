@@ -2,8 +2,7 @@ using Unity.Netcode;
 
 public class PlayerIdentifier : NetworkBehaviour
 {
-    private int localPlayerIndex;
-    private int characterId;
+    public int playerIndex { get; private set; }
 
     public override void OnNetworkSpawn()
     {
@@ -17,17 +16,12 @@ public class PlayerIdentifier : NetworkBehaviour
     {
         if (IsServer)
         {
-            PlayerHandler.Instance?.UnregisterPlayer(OwnerClientId, localPlayerIndex);
+            PlayerHandler.Instance?.UnregisterPlayer(OwnerClientId, playerIndex);
         }
     }
 
-    public void SetPlayerIndex(int playerIndex)
+    public void SetPlayerIndex(int newPlayerIndex)
     {
-        localPlayerIndex = playerIndex;
-    }
-
-    public void SetCharacterId(int newCharacterId)
-    {
-        characterId = newCharacterId;
+        playerIndex = newPlayerIndex;
     }
 }

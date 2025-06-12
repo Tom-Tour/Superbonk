@@ -1,38 +1,67 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class CursorController : MonoBehaviour
 {
     // REFERENCES
-    private Camera camera;
     private Cursor cursor;
     private PlayerInput playerInput;
+    private Camera camera;
+    
+    // ROUTINES
+    private Coroutine getCameraRoutine;
     
     // INFORMATIVES
     private Vector2 direction = Vector2.zero;
     private bool isUsingMouseAndKeyboard = false;
-    private bool isReady = false;
-    private bool isLocal = true;
     private Vector2 lastMousePosition;
 
     private void Awake()
     {
-        camera = Camera.main;
         cursor = GetComponent<Cursor>();
         playerInput = GetComponent<PlayerInput>();
+        camera = Camera.main;
         isUsingMouseAndKeyboard = playerInput.currentControlScheme == "Keyboard&Mouse";
     }
+
+    private IEnumerator GetCameraRoutine()
+    {
+        while (!camera)
+        {
+            Camera cam = Camera.main;
+            if (cam)
+            {
+                Debug.Log("Find camera !");
+                camera = cam;
+                yield break;
+            }
+            yield return new WaitForSeconds(.1f);
+        }
+    }
+    
     private void Update()
     {
         if (isUsingMouseAndKeyboard)
         {
-            Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
-            if (lastMousePosition != mouseScreenPos)
+            if (!camera)
             {
-                Vector3 mouseWorldPos = camera.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, camera.nearClipPlane));
-                mouseWorldPos.z = 0;
-                cursor.Teleport(mouseWorldPos);
-                lastMousePosition = mouseScreenPos;
+                if (getCameraRoutine == null)
+                {
+                    getCameraRoutine = StartCoroutine(GetCameraRoutine());
+                }
+            }
+            else
+            {
+                Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+                if (lastMousePosition != mouseScreenPos)
+                {
+                    // Vector3 mouseWorldPos = camera.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, camera.nearClipPlane));
+                    Vector3 mouseWorldPos = camera.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, -camera.transform.position.z));
+                    mouseWorldPos.z = 0;
+                    cursor.Teleport(mouseWorldPos);
+                    lastMousePosition = mouseScreenPos;
+                } 
             }
         }
     }
@@ -48,11 +77,19 @@ public class CursorController : MonoBehaviour
             cursor.Ready();
         }
     }
-    private void OnFire(InputValue value)
+    private void OnAttack(InputValue value)
     {
         if (value.isPressed)
         {
             cursor.Ready();
+        }
+    }
+
+    private void OnCrouch(InputValue value)
+    {
+        if (value.isPressed)
+        {
+            cursor.ForceStart();
         }
     }
 }

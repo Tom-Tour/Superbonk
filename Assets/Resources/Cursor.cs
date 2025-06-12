@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.InputSystem;
@@ -6,20 +7,30 @@ public class Cursor : NetworkBehaviour
 {
     // REFERENCES
     private PlayerInput playerInput;
-    private PlayerIdentifier playerIdentifier;
+    public PlayerIdentifier playerIdentifier { get; private set; }
     
     // MODIFIERS
     private float speed = 4;
     
     // INFORMATIVES
     private Vector2 direction = Vector2.zero;
-    private CharacterInformation characterInformation;
+    private CharacterInformation hoverCharacterInformation;
+    private CharacterInformation selectedCharacterInformation;
     private bool isReady = false;
     private bool isLocal = true;
+    private int playerIndex;
+    
+    public static event Action<int, bool> OnPlayerReady;
 
+    private void Start()
+    {
+        playerIndex = InputHandler.Instance.PlayerIndexes.Count - 1;
+    }
+    
     private void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
+        playerIdentifier = GetComponent<PlayerIdentifier>();
     }
 
     public override void OnNetworkSpawn()
@@ -50,7 +61,7 @@ public class Cursor : NetworkBehaviour
             CharacterInformation currentCharacterInformation = other.GetComponent<CharacterInformation>();
             if (currentCharacterInformation != null)
             {
-                characterInformation = currentCharacterInformation;
+                hoverCharacterInformation = currentCharacterInformation;
             }
         }
     }
@@ -60,10 +71,22 @@ public class Cursor : NetworkBehaviour
         if (isLocal)
         {
             CharacterInformation currentCharacterInformation = other.GetComponent<CharacterInformation>();
-            if (currentCharacterInformation == characterInformation)
+            if (currentCharacterInformation == hoverCharacterInformation)
             {
-                characterInformation = null;
+                hoverCharacterInformation = null;
             }
+        }
+    }
+
+    public void ForceStart()
+    {
+        if (!NetworkManager.Singleton.IsListening)
+        {
+            StageManager.Instance.LoadScene("Arena");
+        }
+        else if (IsServer)
+        {
+            StageManager.Instance.LoadSceneNetwork("Arena");
         }
     }
 
@@ -86,20 +109,47 @@ public class Cursor : NetworkBehaviour
     {
         if (isLocal)
         {
-            if (characterInformation != null)
+            if (hoverCharacterInformation != null)
             {
-                isReady = !isReady;
-                if (isReady)
+                if (selectedCharacterInformation == hoverCharacterInformation)
                 {
-                    UpdateCharacterInformationServerRpc(characterInformation.characterId);
+                    isReady = !isReady;
+                    selectedCharacterInformation = null;
+                }
+                else
+                {
+                    isReady = true;
+                    selectedCharacterInformation = hoverCharacterInformation;
+                }
+                if (NetworkManager.Singleton.IsListening)
+                {
+                    ReadyServerRpc(isReady);
+                }
+                else
+                {
+                    OnPlayerReady?.Invoke(playerIndex, isReady);
                 }
             }
         }
     }
 
     [ServerRpc]
-    private void UpdateCharacterInformationServerRpc(int characterId)
+    private void ReadyServerRpc(bool isReadyFromClient, ServerRpcParams rpcParams = default)
     {
-        playerIdentifier.SetCharacterId(characterId);
+        int playerId = PlayerHandler.Instance.GetPlayerCount() - 1;
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { rpcParams.Receive.SenderClientId }
+            }
+        };
+        ReadyClientRpc(playerId, isReadyFromClient, clientRpcParams);
+    }
+
+    [ClientRpc]
+    private void ReadyClientRpc(int playerId, bool isReadyFromClient, ClientRpcParams clientRpcParams = default)
+    {
+        OnPlayerReady?.Invoke(playerId, isReadyFromClient);
     }
 }

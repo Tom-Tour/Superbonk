@@ -30,8 +30,30 @@ public class Character : NetworkBehaviour
     private int jumpCount;
     public bool canMove { get; private set; } = true;
     public bool isGrounded { get; private set; } = false;
-    public bool isMoving { get; private set; } = false;
-    public bool isJumping { get; private set; } = false;
+    
+    
+    // public bool isMoving { get; private set; } = false;
+    // public bool isJumping { get; private set; } = false;
+    
+    // NetworkVariable
+    private NetworkVariable<bool> isMoving = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner
+    );
+    public bool IsMoving => isMoving.Value;
+    
+    private NetworkVariable<bool> isJumping = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner
+    );
+    public bool IsJumping => isJumping.Value;
+    
+    
+    
+    
+    
     public bool isTouchingLeftWall { get; private set; } = false;
     public bool isTouchingRightWall { get; private set; } = false;
     public bool isTouchingTopWall { get; private set; } = false;
@@ -90,11 +112,11 @@ public class Character : NetworkBehaviour
         {
             movement.x = 0f;
         }
-        if (isMoving && !isTouchingLeftWall && !isTouchingRightWall)
+        if (isMoving.Value && !isTouchingLeftWall && !isTouchingRightWall)
         {
             movement.x = horizontalMovement * moveSpeed;
         }
-        else if (!isMoving)
+        else if (!isMoving.Value)
         {
             float inertia = isGrounded ? inertiaGround : inertiaAir;
             if (inertia <= 0f)
@@ -120,12 +142,12 @@ public class Character : NetworkBehaviour
         {
             jumpingForce = Vector3.zero;
         }
-        if (isJumping)
+        if (isJumping.Value)
         {
             jumpingForce *= .96f;
             if (Mathf.Abs(jumpingForce.magnitude) < Mathf.Abs(gravity.magnitude))
             {
-                isJumping = false;
+                isJumping.Value = false;
             }
         }
         else
@@ -169,7 +191,7 @@ public class Character : NetworkBehaviour
         horizontalMovement = vector.normalized.x;
         if (horizontalMovement != 0)
         {
-            isMoving = true;
+            isMoving.Value = true;
             movement = new Vector3(horizontalMovement * moveSpeed, 0, 0);
             
             // spriteRenderer.flipX = horizontalMovement < 0;
@@ -179,7 +201,7 @@ public class Character : NetworkBehaviour
         }
         else
         {
-            isMoving = false;
+            isMoving.Value = false;
         }
     }
     private void Jump(float value)
@@ -188,7 +210,7 @@ public class Character : NetworkBehaviour
         {
             if (jumpCount > 0)
             {
-                isJumping = true;
+                isJumping.Value = true;
                 jumpingForce = -LevelData.instance.gravityDirection * jumpForce;
                 jumpCount--;
                 gravity = Vector3.zero;
@@ -196,7 +218,7 @@ public class Character : NetworkBehaviour
         }
         else
         {
-            isJumping = false;
+            isJumping.Value = false;
         }
     }
 
@@ -216,7 +238,7 @@ public class Character : NetworkBehaviour
         checkerLeft = new Vector3(collider.bounds.min.x, transform.position.y, transform.position.z);
         checkerRight = new Vector3(collider.bounds.max.x, transform.position.y, transform.position.z);
 
-        if (!isJumping)
+        if (!isJumping.Value)
         {
             isGrounded = Physics.CheckBox(checkerBot, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
             if (isGrounded)

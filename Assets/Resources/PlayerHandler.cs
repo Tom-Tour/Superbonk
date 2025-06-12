@@ -39,6 +39,10 @@ public class PlayerHandler : NetworkBehaviour
     }
     private void OnPlayerJoinedNetwork(int playerIndex)
     {
+        if (!NetworkManager.Singleton.IsClient)
+        {
+            Debug.LogError($"Player {playerIndex} is not connected !");
+        }
         RequestRegisterPlayerServerRpc(playerIndex);
     }
     [ServerRpc(RequireOwnership = false)]
@@ -76,9 +80,10 @@ public class PlayerHandler : NetworkBehaviour
             playerSlots.Remove(playerSlot);
         }
     }
-    
-    public int GetPlayerValidIndex()
+
+
+    public int GetPlayerCount()
     {
-        return playerSlots.Count -1;
+        return playerSlots.Count;
     }
 }

@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -17,5 +18,15 @@ public class StageManager : MonoBehaviour
     void Start()
     {
         SceneManager.LoadScene("Lobby");
+    }
+
+    public void LoadScene(string scene)
+    {
+        SceneManager.LoadScene(scene);
+    }
+
+    public void LoadSceneNetwork(string scene)
+    {
+        NetworkManager.Singleton.SceneManager.LoadScene(scene, LoadSceneMode.Single);
     }
 }

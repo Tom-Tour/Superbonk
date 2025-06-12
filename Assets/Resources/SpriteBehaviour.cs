@@ -30,7 +30,7 @@ public class SpriteBehaviour : NetworkBehaviour
         if (IsServer)
         {
             // colorIndex.Value = Random.Range(0, Palette.playerColors.Length);
-            int colorId = PlayerHandler.Instance.GetPlayerValidIndex();
+            int colorId = PlayerHandler.Instance.GetPlayerCount() - 1;
             colorIndex.Value = colorId < 0 ? 0 : colorId;
         }
         ChangeColor(colorIndex.Value);
