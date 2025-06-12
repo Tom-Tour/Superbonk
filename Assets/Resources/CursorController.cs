@@ -1,17 +1,12 @@
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Unity.Netcode;
 
-public class CursorController : NetworkBehaviour
+public class CursorController : MonoBehaviour
 {
     // REFERENCES
-    private PlayerInput playerInput;
     private Camera camera;
-    private NetworkObject networkObject;
-    
-    // MODIFIERS
-    private float speed = 4;
+    private Cursor cursor;
+    private PlayerInput playerInput;
     
     // INFORMATIVES
     private Vector2 direction = Vector2.zero;
@@ -23,66 +18,41 @@ public class CursorController : NetworkBehaviour
     private void Awake()
     {
         camera = Camera.main;
+        cursor = GetComponent<Cursor>();
         playerInput = GetComponent<PlayerInput>();
         isUsingMouseAndKeyboard = playerInput.currentControlScheme == "Keyboard&Mouse";
     }
-    public override void OnNetworkSpawn()
-    {
-        if (!IsOwner)
-        {
-            isLocal = false;
-            playerInput.enabled = false;
-        }
-    }
-    public override void OnNetworkDespawn()
-    {
-        isLocal = true;
-        playerInput.enabled = true;
-    }
     private void Update()
     {
-        if (isLocal)
+        if (isUsingMouseAndKeyboard)
         {
-            transform.Translate(direction * (speed * Time.deltaTime));
-            if (isUsingMouseAndKeyboard)
+            Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+            if (lastMousePosition != mouseScreenPos)
             {
-                Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
-                if (lastMousePosition != mouseScreenPos)
-                {
-                    Vector3 mouseWorldPos = camera.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, camera.nearClipPlane));
-                    mouseWorldPos.z = 0;
-                    transform.position = mouseWorldPos;
-                    lastMousePosition = mouseScreenPos;
-                }
+                Vector3 mouseWorldPos = camera.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, camera.nearClipPlane));
+                mouseWorldPos.z = 0;
+                cursor.Teleport(mouseWorldPos);
+                lastMousePosition = mouseScreenPos;
             }
         }
     }
     private void OnMove(InputValue value)
     {
-        if (isLocal)
-        {
-            direction = value.Get<Vector2>().normalized;
-            isReady = false;
-        }
+        direction = value.Get<Vector2>().normalized;
+        cursor.SetDirection(direction);
     }
     private void OnJump(InputValue value)
     {
-        if (isLocal)
+        if (value.isPressed)
         {
-            if (value.isPressed)
-            {
-                isReady = !isReady;
-            }
+            cursor.Ready();
         }
     }
     private void OnFire(InputValue value)
     {
-        if (isLocal)
+        if (value.isPressed)
         {
-            if (value.isPressed)
-            {
-                isReady = !isReady;
-            }
+            cursor.Ready();
         }
     }
 }

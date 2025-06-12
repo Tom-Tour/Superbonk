@@ -101,6 +101,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  colorIndex:
+    m_InternalValue: 100
 --- !u!1 &8922723843686180553
 GameObject:
   m_ObjectHideFlags: 0
@@ -110,6 +112,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7160318450063028464}
+  - component: {fileID: 8098602357992433225}
   - component: {fileID: -8881694529108712752}
   - component: {fileID: 7868611534269662803}
   - component: {fileID: 1535036203233472643}
@@ -137,6 +140,18 @@ Transform:
   - {fileID: 4737115021016435812}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8098602357992433225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8922723843686180553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c79b8caa1e2d414d8b90287eb05bfc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &-8881694529108712752
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -215,7 +230,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
+  m_Radius: 0.1
 --- !u!50 &8509892935882561544
 Rigidbody2D:
   serializedVersion: 5
