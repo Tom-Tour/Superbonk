@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
-using UnityEngine.SceneManagement;
 
 public class Lobby : NetworkBehaviour
 {
@@ -65,7 +64,7 @@ public class Lobby : NetworkBehaviour
         Debug.Log($"Player {clientId}.{localPlayerIndex} has been spawned.");
         GameObject cursor = Instantiate(playerCursorPrefab);
         cursor.GetComponent<PlayerIdentifier>().SetPlayerIndex(localPlayerIndex);
-        cursor.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
+        cursor.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
     }
 
     [ServerRpc(RequireOwnership = false)]

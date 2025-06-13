@@ -1,5 +1,8 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using UnityEngine.InputSystem;
 
 // Bug à corriger :
 // Le personnage s'enfonce dans le sol à l'atterrissage avec une vélocité un peu trop forte, arrêtant complètement l'inertie.
@@ -13,6 +16,7 @@ public class Character : NetworkBehaviour
     public Rigidbody rigidbody { get; private set; }
     public Collider collider { get; private set; }
     public SpriteRenderer spriteRenderer { get; private set; }
+    private PlayerInput playerInput;
     
     
     // MODIFIERS
@@ -25,15 +29,20 @@ public class Character : NetworkBehaviour
     private float rangeRadius = 1f;
     private Vector3 gravityDirectionOverride = Vector3.zero;
 
+    // ROUTINES
+    private Coroutine attackRoutine;
+    
+    
     // INFORMATIVES
     private float horizontalMovement;
     private int jumpCount;
     public bool canMove { get; private set; } = true;
-    public bool isGrounded { get; private set; } = false;
+    private bool isLocal = true;
     
     
     // public bool isMoving { get; private set; } = false;
     // public bool isJumping { get; private set; } = false;
+    // public bool isGrounded { get; private set; } = false;
     
     // NetworkVariable
     private NetworkVariable<bool> isMoving = new NetworkVariable<bool>(
@@ -49,6 +58,27 @@ public class Character : NetworkBehaviour
         NetworkVariableWritePermission.Owner
     );
     public bool IsJumping => isJumping.Value;
+    
+    private NetworkVariable<bool> isGrounded = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner
+    );
+    public bool IsGrounded => isGrounded.Value;
+    
+    private NetworkVariable<bool> isAttacking = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner
+    );
+    public bool IsAttacking => isGrounded.Value;
+    
+    private NetworkVariable<int> attackingState = new NetworkVariable<int>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner
+    );
+    public int AttackingState => attackingState.Value;
     
     
     
@@ -87,14 +117,36 @@ public class Character : NetworkBehaviour
         UpdateGravity();
     }
 
+    public override void OnNetworkSpawn()
+    {
+        if (!IsOwner)
+        {
+            playerInput.enabled = false;
+            isLocal = false;
+        }
+    }
+    public override void OnNetworkDespawn()
+    {
+        playerInput.enabled = true;
+        isLocal = true;
+    }
+    
     void Update()
     {
+        if (!isLocal)
+        {
+            return;
+        }
         UpdateCheckers();
         // DrawRange();
     }
     
     void FixedUpdate()
     {
+        if (!isLocal)
+        {
+            return;
+        }
         velocity = Vector3.zero;
         ApplyMovement();
         ApplyJumpingForce();
@@ -108,6 +160,10 @@ public class Character : NetworkBehaviour
 
     private void ApplyMovement()
     {
+        if (!isLocal)
+        {
+            return;
+        }
         if ((isTouchingLeftWall && movement.x < 0) || (isTouchingRightWall && movement.x > 0))
         {
             movement.x = 0f;
@@ -118,7 +174,7 @@ public class Character : NetworkBehaviour
         }
         else if (!isMoving.Value)
         {
-            float inertia = isGrounded ? inertiaGround : inertiaAir;
+            float inertia = isGrounded.Value ? inertiaGround : inertiaAir;
             if (inertia <= 0f)
             {
                 movement.x = 0f;
@@ -138,6 +194,10 @@ public class Character : NetworkBehaviour
     }
     private void ApplyJumpingForce()
     {
+        if (!isLocal)
+        {
+            return;
+        }
         if (isTouchingTopWall)
         {
             jumpingForce = Vector3.zero;
@@ -166,8 +226,12 @@ public class Character : NetworkBehaviour
     private void ApplyGravity()
     {
         // TODO
+        if (!isLocal)
+        {
+            return;
+        }
         float gravityForce = LevelData.instance.gravityForce * gravityMultiplier;
-        if (isGrounded)
+        if (isGrounded.Value)
         {
             gravity = Vector3.zero;
         }
@@ -188,6 +252,10 @@ public class Character : NetworkBehaviour
     
     private void Move(Vector2 vector)
     {
+        if (!isLocal)
+        {
+            return;
+        }
         horizontalMovement = vector.normalized.x;
         if (horizontalMovement != 0)
         {
@@ -221,6 +289,39 @@ public class Character : NetworkBehaviour
             isJumping.Value = false;
         }
     }
+    private void Attack(bool state)
+    {
+        // TODO ...
+        Debug.Log("CAKE");
+        Debug.Log(state);
+        Debug.Log("CAKE");
+        if (state)
+        {
+            isAttacking.Value = true;
+            if (attackRoutine == null)
+            {
+                attackRoutine = StartCoroutine(AttackRoutine());
+            }
+        }
+        else
+        {
+            isAttacking.Value = false;
+        }
+    }
+
+    private IEnumerator AttackRoutine()
+    {
+        while (isAttacking.Value)
+        {
+            Debug.Log("attack start");
+            attackingState.Value = (attackingState.Value % 3) + 1;
+            yield return new WaitForSeconds(.5f);
+            Debug.Log("attack end");
+        }
+        attackingState.Value = 0;
+        attackRoutine = null;
+        yield break;
+    }
 
     private void DrawRange()
     {
@@ -232,7 +333,6 @@ public class Character : NetworkBehaviour
     }
     private void UpdateCheckers()
     {
-
         checkerBot = new Vector3(transform.position.x, collider.bounds.min.y, transform.position.z);
         checkerTop = new Vector3(transform.position.x, collider.bounds.max.y, transform.position.z);
         checkerLeft = new Vector3(collider.bounds.min.x, transform.position.y, transform.position.z);
@@ -240,15 +340,15 @@ public class Character : NetworkBehaviour
 
         if (!isJumping.Value)
         {
-            isGrounded = Physics.CheckBox(checkerBot, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
-            if (isGrounded)
+            isGrounded.Value = Physics.CheckBox(checkerBot, new Vector3(0.98f, 0.02f, 0.98f) * .5f, Quaternion.identity,groundLayer);
+            if (isGrounded.Value)
             {
                 jumpCount = jumpCountMax;
             }
         }
         else
         {
-            isGrounded = false;
+            isGrounded.Value = false;
         }
 
         isTouchingLeftWall = Physics.CheckBox(checkerLeft, new Vector3(0.02f, 0.98f, 0.98f) * .5f, Quaternion.identity,groundLayer);
@@ -309,16 +409,33 @@ public class Character : NetworkBehaviour
     }
     public void TryJump(float value)
     {
+        if (!isLocal)
+        {
+            return;
+        }
         Jump(value);
+    }
+    public void TryAttack(bool state)
+    {
+        if (!isLocal)
+        {
+            return;
+        }
+        Attack(state);
     }
     public void TryMove(Vector2 vector)
     {
+        if (!isLocal)
+        {
+            return;
+        }
         Move(vector);
     }
     private void InitComponents()
     {
-        rigidbody = GetComponent<Rigidbody>();
+        playerInput = GetComponent<PlayerInput>();
         collider = GetComponent<Collider>();
+        rigidbody = GetComponent<Rigidbody>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
     private void InitVariables()

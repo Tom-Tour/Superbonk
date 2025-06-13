@@ -12,31 +12,51 @@ public class CharacterAnimator : MonoBehaviour
 
     void Update()
     {
-        if (character.isGrounded)
+        /*
+        AnimatorClipInfo[] animatorClipInfo = animator.GetCurrentAnimatorClipInfo(0);
+        if (animatorClipInfo.Length > 0)
         {
-            if (character.IsMoving)
+            string clipName = animatorClipInfo[0].clip.name;
+            bool attacking = clipName == "Attack1" || clipName == "Attack2" || clipName == "Attack3";
+            if (attacking)
             {
-                animator.Play($"Run");
+                return;
             }
-            else
-            {
-                animator.Play($"Idle");
-            }
+        }
+        */
+        if (character.IsAttacking)
+        {
+            string attackName = "Attack" + character.AttackingState;
+            animator.Play(attackName);
         }
         else
         {
-            if (character.IsJumping)
+            if (character.IsGrounded)
             {
-                if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
+                if (character.IsMoving)
                 {
-                    animator.Play($"Jump");
+                    animator.Play($"Run");
+                }
+                else
+                {
+                    animator.Play($"Idle");
                 }
             }
             else
             {
-                if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Fall"))
+                if (character.IsJumping)
                 {
-                    animator.Play($"Fall");
+                    if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
+                    {
+                        animator.Play($"Jump");
+                    }
+                }
+                else
+                {
+                    if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Fall"))
+                    {
+                        animator.Play($"Fall");
+                    }
                 }
             }
         }

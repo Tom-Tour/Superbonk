@@ -22,17 +22,15 @@ public class Cursor : NetworkBehaviour
     
     public static event Action<int, bool> OnPlayerReady;
 
-    private void Start()
-    {
-        playerIndex = InputHandler.Instance.PlayerIndexes.Count - 1;
-    }
-    
     private void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
         playerIdentifier = GetComponent<PlayerIdentifier>();
     }
-
+    private void Start()
+    {
+        playerIndex = InputHandler.Instance.PlayerIndexes.Count - 1;
+    }
     public override void OnNetworkSpawn()
     {
         if (!IsOwner)
