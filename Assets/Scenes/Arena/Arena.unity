@@ -17239,38 +17239,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5730068553398170831, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
-      propertyPath: SyncScaleX
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5730068553398170831, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
-      propertyPath: SyncScaleY
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5730068553398170831, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
-      propertyPath: SyncScaleZ
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5730068553398170831, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
-      propertyPath: AuthorityMode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5730068553398170831, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
-      propertyPath: SyncPositionZ
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5730068553398170831, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
-      propertyPath: SyncRotAngleX
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5730068553398170831, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
-      propertyPath: SyncRotAngleY
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5730068553398170831, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
-      propertyPath: SyncRotAngleZ
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 5864323382004831908, guid: ad323153cfcdb634bb6632e3419e8634, type: 3}
       propertyPath: GlobalObjectIdHash
       value: 3927586058
