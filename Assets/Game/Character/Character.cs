@@ -71,7 +71,7 @@ public class Character : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Owner
     );
-    public bool IsAttacking => isGrounded.Value;
+    public bool IsAttacking => isAttacking.Value;
     
     private NetworkVariable<int> attackingState = new NetworkVariable<int>(
         0,
@@ -79,8 +79,8 @@ public class Character : NetworkBehaviour
         NetworkVariableWritePermission.Owner
     );
     public int AttackingState => attackingState.Value;
-    
-    
+
+    private bool isAttackingDouble = false;
     
     
     
@@ -291,16 +291,16 @@ public class Character : NetworkBehaviour
     }
     private void Attack(bool state)
     {
-        // TODO ...
-        Debug.Log("CAKE");
-        Debug.Log(state);
-        Debug.Log("CAKE");
         if (state)
         {
             isAttacking.Value = true;
             if (attackRoutine == null)
             {
                 attackRoutine = StartCoroutine(AttackRoutine());
+            }
+            else
+            {
+                isAttackingDouble = true;
             }
         }
         else
@@ -311,17 +311,89 @@ public class Character : NetworkBehaviour
 
     private IEnumerator AttackRoutine()
     {
-        while (isAttacking.Value)
+        try
         {
-            Debug.Log("attack start");
-            attackingState.Value = (attackingState.Value % 3) + 1;
-            yield return new WaitForSeconds(.5f);
-            Debug.Log("attack end");
+            // TODO
+            int attackCount = 3;
+            float activationTime = .5f;
+            float duration = .5f;
+            while (true)
+            {
+                float start = Time.time;
+                attackingState.Value = (attackingState.Value % attackCount) + 1;
+                yield return new WaitUntil(() => !isAttacking.Value && Time.time - start >= activationTime);
+                
+                yield return new WaitForSeconds(duration);
+                if (!isAttacking.Value && !isAttackingDouble)
+                {
+                    yield break;
+                }
+                isAttackingDouble = false;
+            }
         }
-        attackingState.Value = 0;
-        attackRoutine = null;
-        yield break;
+        finally
+        {
+            attackingState.Value = 0;
+            attackRoutine = null;
+        }
     }
+    /*
+    private IEnumerator AttackRoutine()
+    {
+        try
+        {
+            while (true)
+            {
+                attackingState.Value = (attackingState.Value % 3) + 1;
+                yield return new WaitForSeconds(0.5f);
+                if (!isAttacking.Value && !isAttackingDouble)
+                {
+                    yield break;
+                }
+                isAttackingDouble = false;
+            }
+        }
+        finally
+        {
+            attackingState.Value = 0;
+            attackRoutine = null;
+        }
+    }
+    */
+    /*
+    private IEnumerator AttackRoutine()
+    {
+        try
+        {
+            while (true)
+            {
+                attackingState.Value = (attackingState.Value % 3) + 1;
+                Debug.Log($"Attack {attackingState.Value} in preparation.");
+                float timeHeld = 0f;
+                while (timeHeld < 1)
+                {
+                    if (isAttacking.Value)
+                    {
+                        timeHeld += Time.deltaTime;
+                    }
+                    else
+                    {
+                        Debug.Log($"Attack {attackingState.Value} canceled.");
+                        yield break;
+                    }
+                    yield return null;
+                }
+                Debug.Log($"Attack {attackingState.Value} finished.");
+                yield return null;
+            }
+        }
+        finally
+        {
+            attackingState.Value = 0;
+            attackRoutine = null;
+        }
+    }
+    */
 
     private void DrawRange()
     {

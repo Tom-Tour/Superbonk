@@ -24,7 +24,7 @@ public class CharacterAnimator : MonoBehaviour
             }
         }
         */
-        if (character.IsAttacking)
+        if (character.AttackingState != 0)
         {
             string attackName = "Attack" + character.AttackingState;
             animator.Play(attackName);
