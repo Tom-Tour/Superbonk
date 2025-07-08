@@ -1,5 +1,5 @@
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.InputSystem;
@@ -18,6 +18,8 @@ public class Character : NetworkBehaviour
     public SpriteRenderer spriteRenderer { get; private set; }
     private PlayerInput playerInput;
     
+    // EVENTS
+    public event Action<bool> OnAttacking;
     
     // MODIFIERS
     private int jumpCountMax = 20;
@@ -73,12 +75,19 @@ public class Character : NetworkBehaviour
     );
     public bool IsAttacking => isAttacking.Value;
     
-    private NetworkVariable<int> attackingState = new NetworkVariable<int>(
+    private NetworkVariable<int> attackId = new NetworkVariable<int>(
         0,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Owner
     );
-    public int AttackingState => attackingState.Value;
+    public int AttackId => attackId.Value;
+    
+    private NetworkVariable<bool> isAttackReleased = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner
+    );
+    public bool IsAttackReleased => isAttackReleased.Value;
 
     private bool isAttackingDouble = false;
     
@@ -298,7 +307,7 @@ public class Character : NetworkBehaviour
             {
                 attackRoutine = StartCoroutine(AttackRoutine());
             }
-            else
+            else if (isAttackReleased.Value)
             {
                 isAttackingDouble = true;
             }
@@ -313,17 +322,35 @@ public class Character : NetworkBehaviour
     {
         try
         {
-            // TODO
+            // TODO - Attack data
             int attackCount = 3;
-            float activationTime = .5f;
-            float duration = .5f;
+
+            float activationTime = .2f;
+            float chargeTimeMax = 2;
+            float chargeTimeout = 5;
+            float duration = .2f;
+
+            // TODO
+            float[] damage = new float[] {1, .8f, 1.6f};
+            float[] knockback = new float[] {.6f, 0, 1};
+            
             while (true)
             {
                 float start = Time.time;
-                attackingState.Value = (attackingState.Value % attackCount) + 1;
-                yield return new WaitUntil(() => !isAttacking.Value && Time.time - start >= activationTime);
+                attackId.Value = (attackId.Value % attackCount) + 1;
+                
+                // yield return new WaitUntil(() => !isAttacking.Value && Time.time - start >= activationTime);
+                yield return new WaitUntil(() => (!isAttacking.Value && Time.time - start >= activationTime) || Time.time - start >= chargeTimeout);
+                
+                float chargeValue = Mathf.Min(Time.time - start, chargeTimeMax) / chargeTimeMax;
+                Debug.Log(chargeValue);
+                
+                isAttackReleased.Value = true;
+                OnAttacking?.Invoke(true);
                 
                 yield return new WaitForSeconds(duration);
+                isAttackReleased.Value = false;
+                OnAttacking?.Invoke(false);
                 if (!isAttacking.Value && !isAttackingDouble)
                 {
                     yield break;
@@ -333,10 +360,11 @@ public class Character : NetworkBehaviour
         }
         finally
         {
-            attackingState.Value = 0;
+            attackId.Value = 0;
             attackRoutine = null;
         }
     }
+    
     /*
     private IEnumerator AttackRoutine()
     {
@@ -344,7 +372,7 @@ public class Character : NetworkBehaviour
         {
             while (true)
             {
-                attackingState.Value = (attackingState.Value % 3) + 1;
+                attackId.Value = (attackId.Value % 3) + 1;
                 yield return new WaitForSeconds(0.5f);
                 if (!isAttacking.Value && !isAttackingDouble)
                 {
@@ -355,7 +383,7 @@ public class Character : NetworkBehaviour
         }
         finally
         {
-            attackingState.Value = 0;
+            attackId.Value = 0;
             attackRoutine = null;
         }
     }
@@ -367,8 +395,8 @@ public class Character : NetworkBehaviour
         {
             while (true)
             {
-                attackingState.Value = (attackingState.Value % 3) + 1;
-                Debug.Log($"Attack {attackingState.Value} in preparation.");
+                attackId.Value = (attackId.Value % 3) + 1;
+                Debug.Log($"Attack {attackId.Value} in preparation.");
                 float timeHeld = 0f;
                 while (timeHeld < 1)
                 {
@@ -378,18 +406,18 @@ public class Character : NetworkBehaviour
                     }
                     else
                     {
-                        Debug.Log($"Attack {attackingState.Value} canceled.");
+                        Debug.Log($"Attack {attackId.Value} canceled.");
                         yield break;
                     }
                     yield return null;
                 }
-                Debug.Log($"Attack {attackingState.Value} finished.");
+                Debug.Log($"Attack {attackId.Value} finished.");
                 yield return null;
             }
         }
         finally
         {
-            attackingState.Value = 0;
+            attackId.Value = 0;
             attackRoutine = null;
         }
     }

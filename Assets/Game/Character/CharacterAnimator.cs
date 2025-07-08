@@ -24,9 +24,10 @@ public class CharacterAnimator : MonoBehaviour
             }
         }
         */
-        if (character.AttackingState != 0)
+        if (character.AttackId != 0)
         {
-            string attackName = "Attack" + character.AttackingState;
+            string attackState = character.IsAttackReleased ? "Released" : "Charged";
+            string attackName = "Attack" + character.AttackId + "_" + attackState;
             animator.Play(attackName);
         }
         else
